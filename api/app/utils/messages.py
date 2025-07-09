@@ -19,12 +19,14 @@ def convert_messages_to_dict(messages: List[BaseMessage]) -> List[Dict[str, Any]
             usage_metadata = msg.usage_metadata
             function_call = additional_kwargs.get("function_call")
             if(function_call):
+                print("function_call", function_call)
                 converted.append({
                     "type": "tool_call",
                     "content": "",
                     "id": msg.id,
                     "tool_name": function_call.get("name"),
-                    "usage_metadata": usage_metadata
+                    "usage_metadata": usage_metadata,
+                    "arguments": function_call.get("arguments")
                 })
             elif(name == "supervisor"):
                 converted.append({
@@ -60,6 +62,7 @@ def convert_messages_to_dict(messages: List[BaseMessage]) -> List[Dict[str, Any]
 def convert_dict_to_messages(message_dicts: List[Dict[str, Any]]) -> List[BaseMessage]:
     converted = []
     for msg_dict in message_dicts:
+        print(msg_dict)
         if msg_dict["type"] == "human":
             converted.append(HumanMessage(
                 content=msg_dict["content"],  # type: ignore
@@ -79,12 +82,13 @@ def convert_dict_to_messages(message_dicts: List[Dict[str, Any]]) -> List[BaseMe
                 tool_call_id=msg_dict["tool_call_id"]
             ))
         elif msg_dict["type"] == "tool_call":
-            converted.append(ToolMessage(
+            converted.append(AIMessage(
                 content="",  # type: ignore
                 id=msg_dict["id"],
                 additional_kwargs={
                     "function_call": {
                         "name": msg_dict["tool_name"],
+                        "arguments": msg_dict["arguments"]
                     }
                 },
                 usage_metadata=msg_dict["usage_metadata"]
