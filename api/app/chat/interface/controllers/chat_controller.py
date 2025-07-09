@@ -31,6 +31,8 @@ async def chat(request: ChatRequest):
         ]
     messages.append(HumanMessage(content=request.query))
 
+    print(messages)
+
     inputs = GraphState(
         messages=messages,
         remaining_steps=25,

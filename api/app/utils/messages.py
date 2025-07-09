@@ -21,8 +21,9 @@ def convert_messages_to_dict(messages: List[BaseMessage]) -> List[Dict[str, Any]
             if(function_call):
                 converted.append({
                     "type": "tool_call",
-                    "tool_name": function_call.get("name"),
+                    "content": "",
                     "id": msg.id,
+                    "tool_name": function_call.get("name"),
                     "usage_metadata": usage_metadata
                 })
             elif(name == "supervisor"):
@@ -30,15 +31,17 @@ def convert_messages_to_dict(messages: List[BaseMessage]) -> List[Dict[str, Any]
                     "type": "ai", 
                     "content": msg.content,
                     "id": msg.id,
-                    "usage_metadata": usage_metadata
+                    "usage_metadata": usage_metadata,
+                    "name": name
                 })
         elif isinstance(msg, ToolMessage):
             name = msg.name
             converted.append({
                 "type": "tool",
-                "tool_name": name,
                 "content": msg.content,
                 "id": msg.id,
+                "tool_name": name,
+                "tool_call_id": msg.tool_call_id
             })
         elif isinstance(msg, SystemMessage):
             converted.append({
@@ -65,12 +68,26 @@ def convert_dict_to_messages(message_dicts: List[Dict[str, Any]]) -> List[BaseMe
         elif msg_dict["type"] == "ai":
             converted.append(AIMessage(
                 content=msg_dict["content"],  # type: ignore
-                id=msg_dict["id"]
+                id=msg_dict["id"],
+                usage_metadata = msg_dict["usage_metadata"],
+                name = msg_dict["name"]
             ))
         elif msg_dict["type"] == "tool":
             converted.append(ToolMessage(
                 content=msg_dict["content"],  # type: ignore
-                id=msg_dict["id"]
+                id=msg_dict["id"],
+                tool_call_id=msg_dict["tool_call_id"]
+            ))
+        elif msg_dict["type"] == "tool_call":
+            converted.append(ToolMessage(
+                content="",  # type: ignore
+                id=msg_dict["id"],
+                additional_kwargs={
+                    "function_call": {
+                        "name": msg_dict["tool_name"],
+                    }
+                },
+                usage_metadata=msg_dict["usage_metadata"]
             ))
         elif msg_dict["type"] == "system":
             converted.append(SystemMessage(
@@ -101,7 +118,7 @@ async def stream_graph(
         if(type=="values"):
             messages: List[BaseMessage] = metadata["messages"]  # type: ignore
             chat_dict["messages"] = convert_messages_to_dict(messages)
-            yield f"{json.dumps(chat_dict)}\n\n"
+            yield f"data:{json.dumps(chat_dict)}\n\n"
         elif(type=="messages" and agent_name == "supervisor"):
             chat_dict["answer"] += metadata[0].content  # type: ignore
-            yield f"{json.dumps(chat_dict)}\n\n"
+            yield f"data:{json.dumps(chat_dict)}\n\n"
