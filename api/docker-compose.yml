@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  ai:
+    container_name: ai
+    image: ai
+    build: .
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped

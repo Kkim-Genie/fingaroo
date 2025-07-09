@@ -1,0 +1,7 @@
+{
+  "name": "ai",
+  "version": "0.1.0",
+  "scripts": {
+    "start:dev": "docker compose up"
+  }
+}
