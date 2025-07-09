@@ -41,7 +41,6 @@ RUN pip install --no-cache-dir uv
 RUN uv pip install --system -r pyproject.toml
 
 # Install Playwright
-RUN pip install playwright
 RUN playwright install --with-deps
 
 # Expose the port
