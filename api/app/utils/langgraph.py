@@ -47,10 +47,6 @@ async def print_graph(
     config: RunnableConfig,
     isPrintAll: bool = False
 ):
-    chat_dict = {
-        "messages": [],
-        "answer": ""
-    }
     async for agent, type, metadata in graph.astream(
         inputs,
         config,
@@ -60,7 +56,11 @@ async def print_graph(
         agent_name = agent[0].split(":")[0] if len(agent) > 0 else ""
         print(agent_name, "(", type, ")")
         if(type=="values"):
-            messages = metadata["messages"] # type: ignore
+            interrupt_result = metadata.get("__interrupt__", False) # type: ignore
+            if(interrupt_result):
+                print(interrupt_result)
+                continue
+            messages = metadata.get("messages", []) # type: ignore
             for message in messages:
                 print(message)
         elif(type=="messages"):

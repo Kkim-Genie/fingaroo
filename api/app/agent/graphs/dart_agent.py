@@ -18,8 +18,10 @@ from app.agent.tools.dart.event.stock_retirement_tool import stock_retirement_to
 from app.agent.tools.dart.principal.treasury_stock_tool import treasury_stock_tool
 from app.agent.tools.dart.principal.total_stock_tool import total_stock_tool
 from langgraph.prebuilt import create_react_agent
-from langchain_google_genai import ChatGoogleGenerativeAI
 from app.config import get_settings
+from langchain_google_genai import ChatGoogleGenerativeAI
+from datetime import datetime
+from langgraph.checkpoint.memory import InMemorySaver
 
 settings = get_settings()
 
@@ -46,13 +48,16 @@ tools = [
 ]
 
 def dart_agent():
+    today_date = datetime.now().strftime("%Y-%m-%d")
     llm = ChatGoogleGenerativeAI(model=settings.LLM_MODEL, api_key=settings.GOOGLE_API_KEY)
+    checkpointer = InMemorySaver()
 
     dart_agent = create_react_agent(
         model=llm,
         tools=tools,
         prompt="""
         당신은 dart api를 통해 한국 기업 관련 여러 재무 정보 및 이벤트 정보를 조회하는 assistant입니다. 당신에게 주어진 tool을 반드시 사용하여 검색을 수행합니다.
+        오늘의 날짜는 {today_date}입니다.
 
         경제 관련된 다양한 정보를 검색합니다. 답변을 하기 위한 충분한 정보가 있을 경우 실행하지 않습니다. 세부 검색 기능들은 아래와 같습니다.
             1. 특정 기업의 유상증자 및 무상증자 결정 정보 검색
@@ -80,6 +85,7 @@ def dart_agent():
         3. 검색 결과가 있다면 검색 결과를 알려주세요.
         4. 사용자에 질문에 대해 직접적으로 답하지말고 이에 필요한 내용만 검색하세요. 직접적인 답변은 당신의 검색결과를 통해 다른 assistant가 수행할 겁니다. 당신의 역할에만 충실하세요.
         """,
-        name="dart_agent"
+        name="dart_agent",
+        checkpointer=checkpointer
     )
     return dart_agent
