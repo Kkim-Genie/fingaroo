@@ -6,9 +6,8 @@ from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode, CrawlResult
 from crawl4ai import JsonCssExtractionStrategy
 from crawl4ai import BrowserConfig
 
-__root_dir__ = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-
 async def search_quote(query: str):
+    
     session_id = "google_finance_quote"
     base_wait = """js:() => {
         const inputElement = document.querySelectorAll('#yDmH0d > c-wiz.zQTmif.SSPGKf.ccEnac > div > div.KdK6Xc > div.e1AOyf > div > div > div > div.d1dlne > input.Ax4B8.ZAGvjd');
@@ -22,7 +21,7 @@ async def search_quote(query: str):
         # Not using js_only yet since it's our first load
     )
 
-    schema_file_path = f"{__root_dir__}/app/utils/crawl_schemas/finance_quote.json"
+    schema_file_path = f"../../utils/crawl_schemas/finance_quote.json"
     if os.path.exists(schema_file_path):
         with open(schema_file_path, "r") as f:
             schema = json.load(f)

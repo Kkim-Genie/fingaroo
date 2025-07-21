@@ -10,6 +10,10 @@ class Settings(BaseSettings):
 
     OPENAI_API_KEY: str = ""
     GOOGLE_API_KEY: str = ""
+    GOOGLE_CLOUD_PROJECT: str = ""
+    GOOGLE_GENAI_USE_VERTEXAI: bool = True
+    GOOGLE_CLOUD_LOCATION: str = "us-central1"
+    GOOGLE_APPLICATION_CREDENTIALS: str = ""
     LLM_MODEL: str = "gemini-2.5-flash-lite-preview-06-17"
     NAVER_SEARCH_URL: str = "https://openapi.naver.com/v1/search/news.json"
     NAVER_CLIENT_ID: str = ""

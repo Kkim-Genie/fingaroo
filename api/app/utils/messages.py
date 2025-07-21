@@ -3,6 +3,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMe
 from langgraph.graph.state import CompiledStateGraph
 import json
 from langchain_core.runnables import RunnableConfig
+from langgraph.types import Command
 
 def convert_messages_to_dict(messages: List[BaseMessage]) -> List[Dict[str, Any]]:
     converted = []
@@ -19,7 +20,6 @@ def convert_messages_to_dict(messages: List[BaseMessage]) -> List[Dict[str, Any]
             usage_metadata = msg.usage_metadata
             function_call = additional_kwargs.get("function_call")
             if(function_call):
-                print("function_call", function_call)
                 converted.append({
                     "type": "tool_call",
                     "content": "",
@@ -62,7 +62,6 @@ def convert_messages_to_dict(messages: List[BaseMessage]) -> List[Dict[str, Any]
 def convert_dict_to_messages(message_dicts: List[Dict[str, Any]]) -> List[BaseMessage]:
     converted = []
     for msg_dict in message_dicts:
-        print(msg_dict)
         if msg_dict["type"] == "human":
             converted.append(HumanMessage(
                 content=msg_dict["content"],  # type: ignore
@@ -103,26 +102,62 @@ def convert_dict_to_messages(message_dicts: List[Dict[str, Any]]) -> List[BaseMe
             continue
     return converted
 
-async def stream_graph(
+async def _stream_graph_internal(
     graph: CompiledStateGraph,
-    inputs: dict,
+    stream_input: Any,
     config: RunnableConfig,
 ):
+    """Internal function to handle common streaming logic."""
     chat_dict = {
         "messages": [],
-        "answer": ""
+        "answer": "",
+        "thread_id": config.get("configurable", {}).get("thread_id", ""),
+        "__interrupt__": 0
     }
     async for agent, type, metadata in graph.astream(
-        inputs,
+        stream_input,
         config,
         subgraphs=True,
         stream_mode=["messages", "values"],
     ):
         agent_name = agent[0].split(":")[0] if len(agent) > 0 else ""
         if(type=="values"):
-            messages: List[BaseMessage] = metadata["messages"]  # type: ignore
+            interrupt_result = metadata.get("__interrupt__", False) # type: ignore
+            if(interrupt_result):
+                interrupt_data = interrupt_result[0].value
+                chat_dict["__interrupt__"] = {
+                    "command": interrupt_data["command"], 
+                    "payload": interrupt_data["payload"],
+                }
+                yield f"data:{json.dumps(chat_dict, ensure_ascii=False)}\n\n"
+                continue
+            messages: List[BaseMessage] = metadata.get("messages", [])  # type: ignore
             chat_dict["messages"] = convert_messages_to_dict(messages)
-            yield f"data:{json.dumps(chat_dict)}\n\n"
+            yield f"data:{json.dumps(chat_dict, ensure_ascii=False)}\n\n"
         elif(type=="messages" and agent_name == "supervisor"):
             chat_dict["answer"] += metadata[0].content  # type: ignore
-            yield f"data:{json.dumps(chat_dict)}\n\n"
+            yield f"data:{json.dumps(chat_dict, ensure_ascii=False)}\n\n"
+
+async def stream_graph(
+    graph: CompiledStateGraph,
+    inputs: dict,
+    config: RunnableConfig,
+):
+    async for data in _stream_graph_internal(graph, inputs, config):
+        yield data
+
+async def stream_graph_interrupt(
+    graph: CompiledStateGraph,
+    config: RunnableConfig,
+    command: Command
+):
+    async for data in _stream_graph_internal(graph, command, config):
+        yield data
+
+async def stream_graph_continue(
+    query: str,
+    graph: CompiledStateGraph,
+    config: RunnableConfig,
+):
+    async for data in _stream_graph_internal(graph, query, config):
+        yield data
