@@ -1,6 +1,6 @@
-import { HttpService } from '@nestjs/axios';
-import { NewsManager } from 'src/util/manager/news.manager';
-export declare class FutureSnowScraper {
+import { NewsManager } from "src/util/manager/news.manager";
+import { HttpService } from "@nestjs/axios";
+export declare class NateScraper {
     private readonly newsManager;
     private readonly httpService;
     private readonly logger;
