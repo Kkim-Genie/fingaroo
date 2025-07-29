@@ -11,6 +11,7 @@ export type News = {
 };
 
 export interface NateNewsTitle {
+  idx: number;
   title: string;
   link: string;
 }

@@ -10,6 +10,7 @@ import * as timezone from "dayjs/plugin/timezone";
 import puppeteer from "puppeteer";
 import { NateNewsTitle, News } from "../type/news.type";
 import { HttpService } from "@nestjs/axios";
+import * as cheerio from "cheerio";
 
 // Extend dayjs with plugins
 dayjs.extend(utc);
@@ -160,49 +161,54 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
 
   async loadNateNews(): Promise<News[]> {
     try {
-      // const apiUrl = `${process.env.AI_ADMIN_URL}/news/miraeasset/latest`;
-      // const response = await this.api.axiosRef.get(apiUrl);
-      // const latestDate: string = response.data; // YYYY-MM-DD
-
       const results: News[] = [];
-      // let current = dayjs(latestDate).add(1, 'day');
       let current = dayjs();
-      // const today = dayjs().tz('Asia/Seoul');
 
       const titles: NateNewsTitle[] = [];
-      let i = 1;
-      while (true) {
-        const url = `https://news.nate.com/subsection?cate=eco01&mid=n0305&type=c&date=${current.format("YYYYMMDD")}&page=${i}`;
-        await this.page.goto(url, {
-          waitUntil: "networkidle2",
-        });
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+      let pageNum = 1;
 
-        const checkSelector = ".mduNoList";
-        const checkHandle = await this.page.$$(checkSelector);
-        if (checkHandle.length > 0) {
+      // 페이지를 순차적으로 처리하면서 바로 제목과 링크 추출
+      while (true) {
+        const url = `https://news.nate.com/subsection?cate=eco01&mid=n0305&type=c&date=${current.format("YYYYMMDD")}&page=${pageNum}`;
+
+        try {
+          const response = await this.api.axiosRef.get(url, {
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+              "Accept-Language": "en-US,en;q=0.9",
+              Accept:
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+              Referer: "https://www.google.com/",
+            },
+          });
+
+          const $ = cheerio.load(response.data);
+
+          // "No List" 체크 - 더 이상 페이지가 없으면 중단
+          if ($(".mduNoList").length > 0) {
+            break;
+          }
+
+          // 현재 페이지에서 바로 제목과 링크 추출
+          $(".mduSubjectList div a").each((i, element) => {
+            const $element = $(element);
+            const link = $element.attr("href") || "";
+            const title = $element.find("span.tb h2.tit").text().trim();
+
+            if (title && link) {
+              titles.push({ idx: i, title, link });
+            }
+          });
+
+          console.log("page", pageNum, "finished");
+          pageNum++;
+        } catch (error) {
+          this.logger.error(
+            `Error processing page ${pageNum}: ${error.message}`
+          );
           break;
         }
-
-        const linkSelector = ".mduSubjectList div a";
-        const linkHandles = await this.page.$$(linkSelector);
-
-        for (let i = 0; i < linkHandles.length; i++) {
-          const handle = linkHandles[i];
-          const link = await this.page.evaluate(
-            (el) => el.getAttribute("href") || "",
-            handle
-          );
-
-          const title = await handle.evaluate(
-            (el) =>
-              el.querySelector("span.tb h2.tit")?.textContent?.trim() || ""
-          );
-
-          titles.push({ title, link });
-        }
-        console.log("page", i, "finished");
-        i++;
       }
 
       console.log("titles", titles.length);
