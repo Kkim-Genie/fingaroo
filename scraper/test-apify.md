@@ -1,1 +1,1 @@
-apify run --input '{"newsType":"miraeasset"}'
+apify run --input '{"newsType":"nate"}'

@@ -1,4 +1,4 @@
-import { NEWS_TYPE } from '../enum/news.enum';
+import { NEWS_TYPE } from "../enum/news.enum";
 export type NewsType = (typeof NEWS_TYPE)[keyof typeof NEWS_TYPE];
 
 export type News = {
@@ -9,3 +9,8 @@ export type News = {
   company: string;
   keywords: string;
 };
+
+export interface NateNewsTitle {
+  title: string;
+  link: string;
+}

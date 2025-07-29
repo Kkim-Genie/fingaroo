@@ -3,8 +3,8 @@ import { NewsManager } from "src/util/manager/news.manager";
 import { HttpService } from "@nestjs/axios";
 
 @Injectable()
-export class MiraeAssetScraper {
-  private readonly logger: Logger = new Logger(MiraeAssetScraper.name);
+export class NateScraper {
+  private readonly logger: Logger = new Logger(NateScraper.name);
 
   constructor(
     private readonly newsManager: NewsManager,
@@ -12,11 +12,12 @@ export class MiraeAssetScraper {
   ) {}
 
   async scrape(): Promise<void> {
-    const news = await this.newsManager.loadMiraeAssetNews();
-    const apiUrl = `${process.env.AI_ADMIN_URL}/news`;
+    const news = await this.newsManager.loadNateNews();
+
+    // const apiUrl = `${process.env.AI_ADMIN_URL}/news`;
     try {
-      const response = await this.httpService.axiosRef.post(apiUrl, { news });
-      console.log("POST response:", response.data);
+      //   const response = await this.httpService.axiosRef.post(apiUrl, { news });
+      //   console.log('POST response:', response.data);
     } catch (error) {
       console.error("POST error:", error);
     }
