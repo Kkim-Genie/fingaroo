@@ -176,11 +176,13 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
             headers: {
               "User-Agent":
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-              "Accept-Language": "en-US,en;q=0.9",
+              "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
               Accept:
                 "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
               Referer: "https://www.google.com/",
             },
+            responseType: "text",
+            responseEncoding: "utf8",
           });
 
           const $ = cheerio.load(response.data);
@@ -211,7 +213,66 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
         }
       }
 
+      // 뉴스 개수를 제한하여 요청 크기 조절
+      const limitedTitles = titles.slice(0, 100); // 최대 100개로 제한
+      const maxSelectCount = Math.min(limitedTitles.length, 30);
+
+      const aiBody = {
+        messages: [
+          {
+            role: "system",
+            content: "- 친절하게 답변하는 AI 어시스턴트입니다.",
+          },
+          {
+            role: "user",
+            content: `아래의 뉴스 제목들을 보고 가장 중요해 보이는 ${maxSelectCount}개를 선정해줘. 선정 결과는 selectedIndexes 배열에 숫자로 제공해주면 돼\n${limitedTitles.map((title) => `idx:${title.idx} title:${title.title}`).join("\n")}`,
+          },
+        ],
+        topP: 0.8,
+        topK: 0,
+        temperature: 0.5,
+        repetitionPenalty: 1.1,
+        thinking: {
+          effort: "none",
+        },
+        responseFormat: {
+          type: "json",
+          schema: {
+            type: "object",
+            properties: {
+              selectedIndexes: {
+                type: "array",
+                description: "선택된 뉴스 인덱스 배열",
+                minItems: maxSelectCount,
+                maxItems: maxSelectCount,
+                items: {
+                  type: "integer",
+                },
+              },
+            },
+            required: ["selectedIndexes"],
+          },
+        },
+      };
+
       console.log("titles", titles.length);
+
+      // Clova Studio API 호출
+      const clovaResponse = await this.api.axiosRef.post(
+        "https://clovastudio.stream.ntruss.com/v3/chat-completions/HCX-007",
+        aiBody,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.CLOVA_API_KEY}`,
+            "X-NCP-CLOVASTUDIO-REQUEST-ID": `news-selection-${Date.now()}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const responseContent = clovaResponse.data.result.message.content;
+      const selectedIndexes = JSON.parse(responseContent).selectedIndexes;
+      console.log("selectedIndexes", selectedIndexes);
 
       return results;
     } catch (error) {

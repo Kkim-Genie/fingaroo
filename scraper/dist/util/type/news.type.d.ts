@@ -9,6 +9,7 @@ export type News = {
     keywords: string;
 };
 export interface NateNewsTitle {
+    idx: number;
     title: string;
     link: string;
 }
