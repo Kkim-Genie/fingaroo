@@ -3,8 +3,8 @@ from app.config import get_settings
 from app.knowledge.infra.repository.news_repo import NewsRepository
 from app.knowledge.application.embeddings_service import EmbeddingsService
 from app.knowledge.infra.repository.embeddings_repo import EmbeddingsRepository
-from app.knowledge.infra.repository.daily_market_condition_repo import DailyMarketConditionRepository
-from app.knowledge.application.daily_market_condition_service import DailyMarketConditionService
+from app.knowledge.infra.repository.daily_report_repo import DailyReportRepository
+from app.knowledge.application.daily_report_service import DailyReportService
 
 settings = get_settings()
 
@@ -15,14 +15,14 @@ def search_daily_report(date: str) -> str:
     """
     embeddings_repo = EmbeddingsRepository()
     embeddings_service = EmbeddingsService(embeddings_repo=embeddings_repo)
-    daily_market_condition_repo = DailyMarketConditionRepository()
+    daily_report_repo = DailyReportRepository()
     news_repo = NewsRepository()
-    daily_market_condition_service = DailyMarketConditionService(daily_market_condition_repo=daily_market_condition_repo, news_repo=news_repo, embeddings_service=embeddings_service)
-    daily_market_condition_list = daily_market_condition_service.find_by_date(date)
+    daily_report_service = DailyReportService(daily_report_repo=daily_report_repo, news_repo=news_repo, embeddings_service=embeddings_service)
+    daily_report_list = daily_report_service.find_by_date(date)
 
     result_str = "\n".join([f"""<document>
     <date>{report.date}</date>
     <content>{report.content}</content>
-    </document>\n""" for report in daily_market_condition_list])
+    </document>\n""" for report in daily_report_list])
 
     return result_str

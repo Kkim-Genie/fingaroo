@@ -7,16 +7,14 @@ class News(BaseModel):
     link: str
     date: str
     content: str
-    company: str
+    type: str
     created_at: datetime
     updated_at: datetime
-    keywords: list[str]
 
 class CreateNewsBodyElem(BaseModel):
     title: str
     content: str
-    company: str
-    keywords: str
+    type: str
     link: str
     date: str
 

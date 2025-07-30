@@ -7,8 +7,9 @@ settings = get_settings()
 SQLALCHEMY_DATABASE_URL = (
     "postgresql://"
     f"{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}"
-    f"@{settings.SUPABASE_HOST}/postgres?options=--search_path=ai"
+    f"@{settings.SUPABASE_HOST}/postgres"
 )
+
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

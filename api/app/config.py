@@ -13,12 +13,15 @@ class Settings(BaseSettings):
     NAVER_SEARCH_URL: str = "https://openapi.naver.com/v1/search/news.json"
     NAVER_CLIENT_ID: str = ""
     NAVER_CLIENT_SECRET: str = ""
+    NAVER_STATE: str =  ""
     DART_API_KEY: str = ""
     SUPABASE_USER: str = ""
     SUPABASE_PASSWORD: str = ""
     SUPABASE_HOST: str = ""
     CLOVASTUDIO_API_KEY: str = ""
-    UPSTAGE_API_KEY: str = ""
+    JWT_ACCESS_SECRET_KEY: str = ""
+    JWT_REFRESH_SECRET_KEY: str = ""
+    DATA_GO_API_KEY: str = ""
 
 @lru_cache
 def get_settings():

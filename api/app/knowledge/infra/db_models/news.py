@@ -15,7 +15,6 @@ class News(Base):
     link: Mapped[str] = mapped_column(Text(), nullable=True)
     date: Mapped[str] = mapped_column(Text(), nullable=True)
     content: Mapped[str] = mapped_column(Text(), nullable=False)
-    company: Mapped[str] = mapped_column(Text(), nullable=False)
+    type: Mapped[str] = mapped_column(Text(), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    keywords: Mapped[list[str]] = mapped_column(ARRAY(String(191)), nullable=False)

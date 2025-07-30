@@ -1,9 +1,8 @@
 from app.knowledge.domain.repository.embeddings_repo import IEmbeddingsRepository
 from app.knowledge.infra.db_models.embeddings import Embeddings
-from google import genai
-from google.genai.types import EmbedContentConfig
 from app.config import get_settings
 from app.utils.knowledge_utils import make_weekly_report_dates
+from app.utils.langgraph import embedding_string
 
 settings = get_settings()
 
@@ -17,8 +16,8 @@ class EmbeddingsService:
     def get_first(self) -> Embeddings:
         return self.embeddings_repo.get_first()
 
-    def retrieve_by_query(self, query: str, top_k: int) -> list[Embeddings]:
-        query_embedding = self.make_embeddings([query], "query")
+    async def retrieve_by_query(self, query: str, top_k: int) -> list[Embeddings]:
+        query_embedding = await self.make_embeddings(query)
         return self.embeddings_repo.retrieve_by_query(query_embedding, top_k)
 
     def create(self, embeddings: Embeddings):
@@ -27,16 +26,8 @@ class EmbeddingsService:
     def create_many(self, embeddings: list[Embeddings]):
         return self.embeddings_repo.create_many(embeddings)
 
-    def make_embeddings(self, contents: list[str], type: str) -> list[float]:
-        client = genai.Client(vertexai=True, project=settings.GOOGLE_CLOUD_PROJECT, location=settings.GOOGLE_CLOUD_LOCATION)
-        response = client.models.embed_content(
-            model="gemini-embedding-001",
-            contents=contents,
-            config=EmbedContentConfig(
-                task_type="RETRIEVAL_QUERY" if type=="query" else "RETRIEVAL_DOCUMENT",
-            ),
-        )
-        embedding = response.embeddings[0].values
+    async def make_embeddings(self, contents: str) -> list[float]:
+        embedding = await embedding_string(contents)
 
         return embedding
 

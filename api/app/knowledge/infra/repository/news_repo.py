@@ -32,7 +32,10 @@ class NewsRepository(INewsRepository):
 
     def get_latest_news(self, type: str) -> News:
         with SessionLocal() as db:
-            news = db.query(News).filter(News.company == type).order_by(News.date.desc()).first()
+            news = db.query(News).filter(News.type == type).order_by(News.date.desc()).first()
+
+        if(news is None):
+            return None
 
         return News(**row_to_dict(news))
 

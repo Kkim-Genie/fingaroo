@@ -1,6 +1,6 @@
-from app.knowledge.domain.repository.daily_market_condition_repo import IDailyMarketConditionRepository
+from app.knowledge.domain.repository.daily_report_repo import IDailyReportRepository
 from app.knowledge.infra.db_models.embeddings import Embeddings
-from app.knowledge.infra.db_models.daily_market_condition import DailyMarketCondition
+from app.knowledge.infra.db_models.daily_report import DailyReport
 from app.utils.knowledge_utils import make_daily_report_prompt
 from langchain_naver import ChatClovaX
 from app.utils.id_utils import generate_nanoid
@@ -11,24 +11,24 @@ from app.knowledge.application.embeddings_service import EmbeddingsService
 
 settings = get_settings()
 
-class DailyMarketConditionService:
+class DailyReportService:
     def __init__(
         self,
-        daily_market_condition_repo: IDailyMarketConditionRepository,
+        daily_report_repo: IDailyReportRepository,
         news_repo: INewsRepository,
         embeddings_service: EmbeddingsService,
     ):
-        self.daily_market_condition_repo = daily_market_condition_repo    
+        self.daily_report_repo = daily_report_repo    
         self.news_repo = news_repo
         self.embeddings_service = embeddings_service
 
-    def get_first(self) -> DailyMarketCondition:
-        return self.daily_market_condition_repo.get_first()
+    def get_first(self) -> DailyReport:
+        return self.daily_report_repo.get_first()
 
-    def find_by_date(self, date: str) -> list[DailyMarketCondition]:
-        return self.daily_market_condition_repo.find_by_date(date)
+    def find_by_date(self, date: str) -> list[DailyReport]:
+        return self.daily_report_repo.find_by_date(date)
 
-    def create(self, date_string: str):
+    async def create(self, date_string: str):
         contexts = self.news_repo.get_daily_report_contexts(date_string)
         prompt = make_daily_report_prompt(date_string, contexts)
 
@@ -40,22 +40,22 @@ class DailyMarketConditionService:
         content = response.content
 
         report_id = generate_nanoid()
-        report = DailyMarketCondition(
+        report = DailyReport(
             id=report_id,
             date=date_string,
             content=content,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
-        self.daily_market_condition_repo.create(report)
+        self.daily_report_repo.create(report)
 
-        embedding = self.embeddings_service.make_embeddings([content], "document")
+        embedding = await self.embeddings_service.make_embeddings(content)
 
         embeddings = Embeddings(
             id=generate_nanoid(),
             date=date_string,
             origin_id=report_id,
-            origin_type="daily_market_condition",
+            origin_type="daily_report",
             content=content,
             embedding=embedding
         )

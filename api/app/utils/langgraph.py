@@ -7,6 +7,10 @@ import uuid
 from langchain_core.messages import BaseMessage
 from app.utils.messages import convert_messages_to_dict
 import json
+from app.config import get_settings
+import requests
+
+settings = get_settings()
 
 def visualize_graph(graph, xray=False):
     """
@@ -67,6 +71,21 @@ async def print_graph(
             print(metadata)
         print("----")
         
+async def embedding_string(text: str):
+    url = f"https://clovastudio.stream.ntruss.com/v1/api-tools/embedding/v2"
+
+    headers = {
+        "Authorization": f"Bearer {settings.CLOVASTUDIO_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "text":text
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    result = response.json()
+    embeddig = result["result"]["embedding"]
+    return embeddig
 
 def random_uuid():
     return str(uuid.uuid4())
