@@ -28,7 +28,7 @@ let NewsManager = NewsManager_1 = class NewsManager {
     async onModuleInit() {
         this.browser = await puppeteer_1.default.launch({
             pipe: true,
-            headless: false,
+            headless: true,
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
@@ -74,7 +74,8 @@ let NewsManager = NewsManager_1 = class NewsManager {
             const results = [];
             let current = dayjs(latestDate).add(1, "day");
             const today = dayjs().tz("Asia/Seoul");
-            while (current <= today) {
+            let i = 0;
+            while (current <= today && i++ < 10) {
                 const year = current.format("YYYY");
                 const month = current.format("MM");
                 const day = current.format("DD");
@@ -110,8 +111,7 @@ let NewsManager = NewsManager_1 = class NewsManager {
                             return {
                                 title,
                                 content,
-                                company: "miraeasset",
-                                keywords: "",
+                                type: "miraeasset",
                                 link: window.location.href,
                             };
                         });
@@ -222,7 +222,6 @@ let NewsManager = NewsManager_1 = class NewsManager {
                 },
             });
             const responseContent = clovaResponse.data.result.message.content;
-            console.log("responseContent", responseContent);
             const selectedIndexes = JSON.parse(responseContent).selectedIndexes;
             console.log("selectedIndexes", selectedIndexes);
             return results;
