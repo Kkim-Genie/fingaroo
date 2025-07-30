@@ -22,4 +22,4 @@ RUN playwright install --with-deps
 EXPOSE 8001
 
 # Command to run the application
-CMD ["uv", "run", "main.py"] 
+CMD ["uv", "run", "main.py"]

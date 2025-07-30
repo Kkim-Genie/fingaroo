@@ -2,7 +2,7 @@ from app.knowledge.domain.repository.daily_market_condition_repo import IDailyMa
 from app.knowledge.infra.db_models.embeddings import Embeddings
 from app.knowledge.infra.db_models.daily_market_condition import DailyMarketCondition
 from app.utils.knowledge_utils import make_daily_report_prompt
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_naver import ChatClovaX
 from app.utils.id_utils import generate_nanoid
 from datetime import datetime
 from app.knowledge.domain.repository.news_repo import INewsRepository
@@ -32,7 +32,10 @@ class DailyMarketConditionService:
         contexts = self.news_repo.get_daily_report_contexts(date_string)
         prompt = make_daily_report_prompt(date_string, contexts)
 
-        llm = ChatGoogleGenerativeAI(model=settings.LLM_MODEL, api_key=settings.GOOGLE_API_KEY)
+        llm = ChatClovaX(
+            model=settings.LLM_MODEL_BASE, 
+            api_key=settings.CLOVASTUDIO_API_KEY
+        )
         response = llm.invoke(prompt)
         content = response.content
 

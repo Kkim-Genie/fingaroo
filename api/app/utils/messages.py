@@ -28,7 +28,7 @@ def convert_messages_to_dict(messages: List[BaseMessage]) -> List[Dict[str, Any]
                     "usage_metadata": usage_metadata,
                     "arguments": function_call.get("arguments")
                 })
-            elif(name == "supervisor"):
+            elif(name == "answer_agent"):
                 converted.append({
                     "type": "ai", 
                     "content": msg.content,
@@ -122,6 +122,8 @@ async def _stream_graph_internal(
     ):
         agent_name = agent[0].split(":")[0] if len(agent) > 0 else ""
         if(type=="values"):
+            # for(message) in metadata.get("messages", []):
+            #     print(message)
             interrupt_result = metadata.get("__interrupt__", False) # type: ignore
             if(interrupt_result):
                 interrupt_data = interrupt_result[0].value
@@ -134,7 +136,7 @@ async def _stream_graph_internal(
             messages: List[BaseMessage] = metadata.get("messages", [])  # type: ignore
             chat_dict["messages"] = convert_messages_to_dict(messages)
             yield f"data:{json.dumps(chat_dict, ensure_ascii=False)}\n\n"
-        elif(type=="messages" and agent_name == "supervisor"):
+        elif(type=="messages" and agent_name == "answer_agent"):
             chat_dict["answer"] += metadata[0].content  # type: ignore
             yield f"data:{json.dumps(chat_dict, ensure_ascii=False)}\n\n"
 

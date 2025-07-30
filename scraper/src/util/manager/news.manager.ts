@@ -28,7 +28,7 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
   async onModuleInit(): Promise<any> {
     this.browser = await puppeteer.launch({
       pipe: true,
-      headless: false,
+      headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -85,7 +85,8 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
       const results: News[] = [];
       let current = dayjs(latestDate).add(1, "day");
       const today = dayjs().tz("Asia/Seoul");
-      while (current <= today) {
+      let i = 0;
+      while (current <= today && i++ < 10) {
         const year = current.format("YYYY");
         const month = current.format("MM");
         const day = current.format("DD");
@@ -129,8 +130,7 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
               return {
                 title,
                 content,
-                company: "miraeasset",
-                keywords: "",
+                type: "miraeasset",
                 link: window.location.href,
               };
             });

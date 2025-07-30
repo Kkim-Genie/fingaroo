@@ -30,7 +30,7 @@ class EmbeddingsService:
     def make_embeddings(self, contents: list[str], type: str) -> list[float]:
         client = genai.Client(vertexai=True, project=settings.GOOGLE_CLOUD_PROJECT, location=settings.GOOGLE_CLOUD_LOCATION)
         response = client.models.embed_content(
-            model="text-multilingual-embedding-002",
+            model="gemini-embedding-001",
             contents=contents,
             config=EmbedContentConfig(
                 task_type="RETRIEVAL_QUERY" if type=="query" else "RETRIEVAL_DOCUMENT",
@@ -45,3 +45,6 @@ class EmbeddingsService:
         for date in datesToFetch:
             self.embeddings_repo.delete_by_date_type(date, "news")
             self.embeddings_repo.delete_by_date_type(date, "daily_market_condition")
+
+    def put_embedding_by_id(self, id: str, embedding: list[float]):
+        return self.embeddings_repo.put_embedding_by_id(id, embedding)

@@ -7,5 +7,6 @@ from typing import Sequence
 
 class GraphState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
+    answer: Annotated[str, ""]
     remaining_steps: RemainingSteps
     is_last_step: IsLastStep

@@ -41,3 +41,8 @@ class EmbeddingsRepository(IEmbeddingsRepository):
         with SessionLocal() as db:
             db.query(Embeddings).filter(Embeddings.date == date, Embeddings.origin_type == type).delete()
             db.commit()
+
+    def put_embedding_by_id(self, id: str, embedding: list[float]):
+        with SessionLocal() as db:
+            db.query(Embeddings).filter(Embeddings.id == id).update({"embedding": embedding})
+            db.commit()

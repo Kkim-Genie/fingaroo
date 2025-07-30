@@ -6,8 +6,7 @@ export type News = {
   title: string;
   link: string;
   content: string;
-  company: string;
-  keywords: string;
+  type: string;
 };
 
 export interface NateNewsTitle {

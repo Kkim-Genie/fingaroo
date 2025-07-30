@@ -22,3 +22,7 @@ class IEmbeddingsRepository(metaclass=ABCMeta):
     @abstractmethod
     def delete_by_date_type(self, date: str, type: str):
         raise NotImplementedError
+
+    @abstractmethod
+    def put_embedding_by_id(self, id: str, embedding: list[float]):
+        raise NotImplementedError

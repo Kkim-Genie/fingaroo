@@ -12,3 +12,7 @@ wheels/
 # Environment
 .env
 google-credentials.json
+
+*.xlsx
+*.csv
+*.pdf
