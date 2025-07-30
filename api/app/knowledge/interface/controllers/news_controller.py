@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, Path, Request
+from fastapi import APIRouter, Depends, Path
 from dependency_injector.wiring import inject, Provide
-from pydantic import BaseModel
 
 from app.containers import Container
 from app.knowledge.application.news_service import NewsService
-from app.knowledge.domain.news import News, CreateNewsBodyElem, CreateNewsBody
+from app.knowledge.domain.news import CreateNewsBody
 
 router = APIRouter(prefix="/knowledge/news", tags=["news"])
 
@@ -15,13 +14,16 @@ def get_latest_news_date(
     type: str = Path(..., description="Type of news"),
 ):
     news = news_service.find_latest(type)
+    if(news is None):
+        return "2025-05-01"
 
     return news.date
 
 @router.post("/", status_code=201)
 @inject
-def create_news(
+async def create_news(
     news: CreateNewsBody,
     news_service: NewsService = Depends(Provide[Container.news_service]),
 ):
-    news_service.create_news(news.news)
+    await news_service.create_news(news.news)
+    return {"status": "success"}

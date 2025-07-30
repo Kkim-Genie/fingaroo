@@ -1,23 +1,23 @@
 from abc import ABCMeta, abstractmethod
 
-from app.knowledge.infra.db_models.daily_market_condition import DailyMarketCondition
+from app.knowledge.infra.db_models.daily_report import DailyReport
 
 
-class IDailyMarketConditionRepository(metaclass=ABCMeta):
+class IDailyReportRepository(metaclass=ABCMeta):
     @abstractmethod
-    def get_first(self) -> DailyMarketCondition:
+    def get_first(self) -> DailyReport:
         raise NotImplementedError
 
     @abstractmethod
-    def search_by_id(self, id: str) -> list[DailyMarketCondition]:
+    def search_by_id(self, id: str) -> list[DailyReport]:
         raise NotImplementedError
 
     @abstractmethod
-    def find_by_date(self, date: str) -> list[DailyMarketCondition]:
+    def find_by_date(self, date: str) -> list[DailyReport]:
         raise NotImplementedError
 
     @abstractmethod
-    def create(self, daily_market_condition: DailyMarketCondition):
+    def create(self, daily_report: DailyReport):
         raise NotImplementedError
 
     @abstractmethod

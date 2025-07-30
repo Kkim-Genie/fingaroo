@@ -7,8 +7,8 @@ from pgvector.sqlalchemy import Vector
 from app.database import Base
 
 
-class DailyMarketCondition(Base):
-    __tablename__ = "daily_market_condition"
+class DailyReport(Base):
+    __tablename__ = "daily_report"
 
     id: Mapped[str] = mapped_column(String(191), primary_key=True)
     date: Mapped[str] = mapped_column(Text(), nullable=True)

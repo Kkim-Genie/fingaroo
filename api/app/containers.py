@@ -9,19 +9,25 @@ from app.dart.application.corp_code_service import DartCorpCodeService
 from app.dart.application.report_principal_service import DartReportPrincipalService
 from app.dart.application.report_economy_service import DartReportEconomyService
 from app.dart.application.report_event_service import DartReportEventService
-from app.knowledge.infra.repository.daily_market_condition_repo import DailyMarketConditionRepository
-from app.knowledge.application.daily_market_condition_service import DailyMarketConditionService
+from app.knowledge.infra.repository.daily_report_repo import DailyReportRepository
+from app.knowledge.application.daily_report_service import DailyReportService
+from app.user.infra.repository.user_repo import UserRepository
+from app.user.application.user_service import UserService
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         packages=[
             "app.dart",
+            "app.chat",
             "app.knowledge",
+            "app.user",
         ],
         modules=[
             "app.dart.interface.controllers.dart_controller",
             "app.chat.interface.controllers.chat_controller",
             "app.knowledge.interface.controllers.news_controller",
+            "app.user.interface.controller.user_controller",
+            "app.stock_price.interface.controller.stock_price_controller",
         ]
     )
 
@@ -37,5 +43,8 @@ class Container(containers.DeclarativeContainer):
     news_repo = providers.Factory(NewsRepository)
     news_service = providers.Factory(NewsService, news_repo=news_repo, embeddings_service=embeddings_service)
 
-    daily_market_condition_repo = providers.Factory(DailyMarketConditionRepository)
-    daily_market_condition_service = providers.Factory(DailyMarketConditionService, daily_market_condition_repo=daily_market_condition_repo, news_repo=news_repo, embeddings_service=embeddings_service)
+    daily_report_repo = providers.Factory(DailyReportRepository)
+    daily_report_service = providers.Factory(DailyReportService, daily_report_repo=daily_report_repo, news_repo=news_repo, embeddings_service=embeddings_service)
+
+    user_repo = providers.Factory(UserRepository)
+    user_service = providers.Factory(UserService, user_repo=user_repo)
