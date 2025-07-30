@@ -15,4 +15,4 @@ class Embeddings(Base):
     origin_id: Mapped[str] = mapped_column(String(191), nullable=False)
     origin_type: Mapped[str] = mapped_column(String(50), nullable=False)
     content: Mapped[str] = mapped_column(Text(), nullable=True)
-    embedding = mapped_column(Vector(768), nullable=False)
+    embedding = mapped_column(Vector(3072), nullable=False)

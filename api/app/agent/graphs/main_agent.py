@@ -1,68 +1,163 @@
+from pydantic import BaseModel
+from typing import Literal
 from app.agent.states.basic_state import GraphState
 from app.agent.graphs.search_agent import search_agent
 from app.agent.graphs.dart_agent import dart_agent
-from app.agent.graphs.stock_price_agent import stock_price_agent
-from app.agent.graphs.chartdata_agent import chartdata_agent
+from app.agent.graphs.answer_agent import answer_agent
 from langgraph_supervisor import create_supervisor
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_naver import ChatClovaX
 from app.config import get_settings
 from langgraph.checkpoint.memory import MemorySaver
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langgraph.graph import END, StateGraph, START
+import requests
+import json
+import traceback
 
 settings = get_settings()
 checkpointer = MemorySaver()
 
+members = [
+    "search_agent",
+    "dart_agent",
+]
+options_for_next = ["answer_agent"] + members
+
+system_prompt = f"""
+    You are a supervisor tasked with managing a conversation between the
+    following workers:  {members}. Given the following user request,
+    respond with the worker to act next. Each worker will perform a
+    task and respond with their results and status. 
+    When finished or there is no need to call any worker, respond with *answer_agent*.
+"""
+
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_prompt),
+        MessagesPlaceholder(variable_name="messages"),
+        (
+            "assistant",
+            "Given the conversation above, who should act next? "
+            "Or should we FINISH? Select one of: {options}",
+        ),
+    ]
+).partial(options=str(options_for_next), members=", ".join(members))
+
+class RouteResponse(BaseModel):
+    next: Literal[*options_for_next]
+
+def supervisor(state: GraphState):
+    formatted_prompt = prompt.format(messages=state["messages"])
+    
+    
+    # CLOVA Studio v3 API 직접 호출
+    url = f"https://clovastudio.stream.ntruss.com/v3/chat-completions/HCX-007"
+    
+    headers = {
+        "Authorization": f"Bearer {settings.CLOVASTUDIO_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "messages": [{"role": "user", "content": formatted_prompt}],
+        "maxCompletionTokens": 100,
+        "temperature": 0.1,
+        "thinking": {
+          "effort": "none",
+        },
+        "responseFormat": {
+            "type": "json",
+            "schema":{
+                "type": "object",
+                "properties": {
+                    "next": {
+                        "type": "string",
+                        "description": "The next agent to call",
+                    }
+                }
+            },
+            "required": ["next"]
+        }
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        
+        result_data = response.json()
+        content = result_data["result"]["message"]["content"]
+        print(content)
+        
+        # JSON 파싱하여 RouteResponse 객체 생성
+        parsed_content = json.loads(content)
+        route_response = RouteResponse(**parsed_content)
+        
+        return {"next": route_response.next}
+        
+    except Exception as e:
+        print(f"Error calling CLOVA Studio API: {e}")
+        print(f"Exception type: {type(e).__name__}")
+        print(f"Full traceback:")
+        traceback.print_exc()
+        
+        # HTTP 에러인 경우 응답 정보도 출력
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"HTTP Status Code: {e.response.status_code}")
+            print(f"Response Headers: {e.response.headers}")
+            try:
+                print(f"Response Content: {e.response.text}")
+            except:
+                print("Could not decode response content")
+        
+        # 요청 정보도 출력
+        print(f"Request URL: {url}")
+        print(f"Request Headers: {headers}")
+        print(f"Request Payload: {json.dumps(payload, indent=2)}")
+        
+        # 오류 시 기본값 반환
+        return {"next": "FINISH"}
+
 def main_agent():
-    llm = ChatGoogleGenerativeAI(model=settings.LLM_MODEL, api_key=settings.GOOGLE_API_KEY)
-    supervisor = create_supervisor(
-        agents=[search_agent(), dart_agent(), stock_price_agent(), chartdata_agent()],
-        model=llm,
-        state_schema=GraphState,
-        output_mode='full_history',
-        prompt="""
-        당신이 가지고 있는 assistant들은 다음과 같습니다
+    workflow = StateGraph(GraphState)
 
-        1. search_agent: 경제와 관련되었거나 추가적인 인터넷 검색이 필요할 떄 사용합니다. 세부 검색 기능들은 아래와 같습니다.
-            - 네이버 뉴스 검색
-            - google finance에서 기본 기업 정보 검색
-            - 경제 관련 뉴스 검색(날짜를 기준으로 검색)
+    workflow.add_node("Supervisor", supervisor)
+    workflow.add_node("search_agent", search_agent)
+    workflow.add_node("dart_agent", dart_agent)
+    workflow.add_node("answer_agent", answer_agent)
 
-        2. dart_agent: dart api를 통해 한국 기업 관련 여러 재무 정보 및 이벤트 정보를 조회합니다.
-            - 특정 기업의 유상증자 및 무상증자 결정 정보 검색
-            - 특정 기업의 자본금 변동 정보 검색
-            - 특정 기업의 분할합병 정보 검색
-            - 특정 기업의 분할 정보 검색
-            - 특정 기업의 합병 정보 검색
-            - 특정 기업의 전환사채 정보 검색
-            - 특정 기업의 배당 정보 검색
-            - 특정 기업의 재무제표 정보 검색
-            - 특정 기업의 무상증자 결정 정보 검색
-            - 특정 기업의 소송 정보 검색
-            - 특정 기업의 다중회사 계정 정보 검색
-            - 특정 기업의 다중회사 재무지표 정보 검색
-            - 특정 기업의 유상증자 결정 정보 검색
-            - 특정 기업의 단일회사 재무지표 정보 검색
-            - 특정 기업의 단일회사 계정 정보 검색
-            - 특정 기업의 자사주매입 정보 검색
-            - 특정 기업의 자기주식 처분 결정 정보 검색
-            - 특정 기업의 주식총수 현황 정보 검색
-            - 특정 기업의 자기주식 현황 정보 검색
+    for member in members:
+        workflow.add_edge(member, "Supervisor")
 
-        3. stock_price_agent: 여러 기업/ETF의 주가 데이터를 검색합니다.
-            - 지표의 id 및 기본정보 검색
-            - 지표의 id를 기반하여 주가 데이터 검색
+    conditional_map = {k: k for k in members}
+    conditional_map["answer_agent"] = "answer_agent"
 
-        4. chartdata_agent: user는 여러 지표의 time series데이터를 담고 있는 차트데이터를 가지고 있습니다. 해당 agent는 이러한 차트데이터를 관리합니다.
-            - 차트데이터에 지표 추가
+    def get_next(state):
+        return state["next"]
 
-        이 assistant들이 협력하도록 하세요.
+    workflow.add_conditional_edges("Supervisor", get_next, conditional_map)
 
-        추가 지시 사항
-        1. 모든 질문에 대한 최족적인 답변은 반드시 `markdown` 형식으로 작성합니다. 
-        2. 일반적인 뉴스, 시황, 흐름에 관한 질문이 들어올 시 search_agent를 통해 검색합니다. 어떤 종류의 뉴스를 원하는지 물어보지 않고 search_agent를 사용합니다. (예: 저번주 월요일 뉴스 알려줘)
-        3. 경제와 관련하지 않은 내용을 질문했다면 다른 agent를 사용하지 말고 자체적으로 판단하여 답변합니다.
-        """
-    )
+    workflow.add_edge(START, "Supervisor")
+    workflow.add_edge("answer_agent", END)
 
-    main_agent = supervisor.compile(checkpointer=checkpointer)
+    graph = workflow.compile(checkpointer=MemorySaver())
 
-    return main_agent
+    return graph
+
+# def test_node(state: GraphState):
+#     llm = ChatClovaX(
+#         model=settings.LLM_MODEL_BASE, 
+#         api_key=settings.CLOVASTUDIO_API_KEY
+#     )
+#     return llm.invoke(state["messages"])
+
+# def main_agent():
+#     workflow = StateGraph(GraphState)
+
+#     workflow.add_node("test_node", test_node)
+
+#     workflow.add_edge(START, "test_node")
+#     workflow.add_edge("test_node", END)
+
+#     graph = workflow.compile(checkpointer=MemorySaver())
+
+#     return graph

@@ -36,3 +36,12 @@ export interface ToolCallMessage extends BaseMessage {
   usage_metadata: UsageMetadata;
   arguments: Record<string, unknown>;
 }
+
+export interface ChatProviderProps {
+  messages: BaseMessage[];
+  isLoading: boolean;
+  input: string;
+  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  setInput: (input: string) => void;
+}

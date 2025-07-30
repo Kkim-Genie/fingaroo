@@ -11,8 +11,6 @@ from app.dart.application.report_economy_service import DartReportEconomyService
 from app.dart.application.report_event_service import DartReportEventService
 from app.knowledge.infra.repository.daily_market_condition_repo import DailyMarketConditionRepository
 from app.knowledge.application.daily_market_condition_service import DailyMarketConditionService
-from app.knowledge.infra.repository.weekly_report_repo import WeeklyReportRepository
-from app.knowledge.application.weekly_report_service import WeeklyReportService
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
@@ -23,7 +21,7 @@ class Container(containers.DeclarativeContainer):
         modules=[
             "app.dart.interface.controllers.dart_controller",
             "app.chat.interface.controllers.chat_controller",
-            "app.knowledge.interface.controllers.news_controller"
+            "app.knowledge.interface.controllers.news_controller",
         ]
     )
 
@@ -41,6 +39,3 @@ class Container(containers.DeclarativeContainer):
 
     daily_market_condition_repo = providers.Factory(DailyMarketConditionRepository)
     daily_market_condition_service = providers.Factory(DailyMarketConditionService, daily_market_condition_repo=daily_market_condition_repo, news_repo=news_repo, embeddings_service=embeddings_service)
-
-    weekly_report_repo = providers.Factory(WeeklyReportRepository)
-    weekly_report_service = providers.Factory(WeeklyReportService, weekly_report_repo=weekly_report_repo, daily_market_condition_repo=daily_market_condition_repo, news_repo=news_repo, embeddings_service=embeddings_service)

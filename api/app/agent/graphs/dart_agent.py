@@ -19,7 +19,7 @@ from app.agent.tools.dart.principal.treasury_stock_tool import treasury_stock_to
 from app.agent.tools.dart.principal.total_stock_tool import total_stock_tool
 from langgraph.prebuilt import create_react_agent
 from app.config import get_settings
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_naver import ChatClovaX
 from datetime import datetime
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -49,7 +49,10 @@ tools = [
 
 def dart_agent():
     today_date = datetime.now().strftime("%Y-%m-%d")
-    llm = ChatGoogleGenerativeAI(model=settings.LLM_MODEL, api_key=settings.GOOGLE_API_KEY)
+    llm = ChatClovaX(
+        model=settings.LLM_MODEL_BASE, 
+        api_key=settings.CLOVASTUDIO_API_KEY
+    )
     checkpointer = InMemorySaver()
 
     dart_agent = create_react_agent(
