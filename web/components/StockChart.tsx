@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import React from "react";
 import dayjs from "dayjs";
 
-// @ts-expect-error - react-apexcharts dynamic import type compatibility issue
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 }) as any;

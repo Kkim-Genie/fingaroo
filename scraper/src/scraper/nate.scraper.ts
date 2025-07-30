@@ -13,6 +13,7 @@ export class NateScraper {
 
   async scrape(): Promise<void> {
     const news = await this.newsManager.loadNateNews();
+    console.log("news", news.length);
     const apiUrl = `${process.env.AI_ADMIN_URL}/news`;
 
     try {
