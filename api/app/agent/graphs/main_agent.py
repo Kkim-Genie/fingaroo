@@ -4,8 +4,7 @@ from app.agent.states.basic_state import GraphState
 from app.agent.graphs.search_agent import search_agent
 from app.agent.graphs.dart_agent import dart_agent
 from app.agent.graphs.answer_agent import answer_agent
-from langgraph_supervisor import create_supervisor
-from langchain_naver import ChatClovaX
+from app.agent.graphs.stock_price_agent import stock_price_agent
 from app.config import get_settings
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -20,6 +19,7 @@ checkpointer = MemorySaver()
 members = [
     "search_agent",
     "dart_agent",
+    "stock_price_agent",
 ]
 options_for_next = ["answer_agent"] + members
 
@@ -124,6 +124,7 @@ def main_agent():
     workflow.add_node("search_agent", search_agent)
     workflow.add_node("dart_agent", dart_agent)
     workflow.add_node("answer_agent", answer_agent)
+    workflow.add_node("stock_price_agent", stock_price_agent)
 
     for member in members:
         workflow.add_edge(member, "Supervisor")

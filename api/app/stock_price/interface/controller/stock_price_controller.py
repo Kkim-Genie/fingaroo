@@ -1,22 +1,17 @@
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
-from app.config import get_settings
+from fastapi import APIRouter, Query
 from fastapi import Depends
 from dependency_injector.wiring import inject, Provide
 from app.containers import Container
-from app.dart.application.corp_code_service import DartCorpCodeService
-
-settings = get_settings()
+from app.stock_price.application.stock_price_service import StockPriceService
 
 router = APIRouter(prefix="/stock-price", tags=["stock-price"])
 
 @router.get("/")
-# @inject
+@inject
 def stock_price(
     name:str=Query(None), 
-    corp_code_service: DartCorpCodeService = Depends(Provide[Container.corp_code_service])
+    stock_price_service: StockPriceService = Depends(Provide[Container.stock_price_service])
     ):
+    stock_price = stock_price_service.get_by_corp_name(name)
     
-    print(name)
-
-    return {"message": "Hello, World!"}
+    return stock_price.model_dump()

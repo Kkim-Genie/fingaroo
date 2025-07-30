@@ -13,6 +13,7 @@ from app.knowledge.infra.repository.daily_report_repo import DailyReportReposito
 from app.knowledge.application.daily_report_service import DailyReportService
 from app.user.infra.repository.user_repo import UserRepository
 from app.user.application.user_service import UserService
+from app.stock_price.application.stock_price_service import StockPriceService
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
@@ -48,3 +49,5 @@ class Container(containers.DeclarativeContainer):
 
     user_repo = providers.Factory(UserRepository)
     user_service = providers.Factory(UserService, user_repo=user_repo)
+
+    stock_price_service = providers.Factory(StockPriceService, corp_code_service=corp_code_service)
