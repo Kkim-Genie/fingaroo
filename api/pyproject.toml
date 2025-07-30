@@ -42,8 +42,6 @@ dependencies = [
     "sentence-transformers>=5.0.0",
     "sqlalchemy>=2.0.41",
     "sse-starlette>=2.3.6",
-    "torch>=2.7.1",
-    "torchvision>=0.22.1",
     "unstructured>=0.18.11",
     "uvicorn>=0.34.2",
 ]
