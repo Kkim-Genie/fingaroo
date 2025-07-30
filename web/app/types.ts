@@ -45,3 +45,11 @@ export interface ChatProviderProps {
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   setInput: (input: string) => void;
 }
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  gender: string;
+  birthyear: number;
+}
