@@ -1,6 +1,28 @@
+"use client";
+
+import useCustomStore from "@/store/useCustomStore";
+import useUserStore from "@/store/useUserStore";
+import Cookies from "js-cookie";
 import React from "react";
 
 export default function ChatHeader() {
+  const userStore = useCustomStore(useUserStore, (state) => state);
+
+  const NaverLogin = () => {
+    const currentUrl = window.location.href;
+    const REDIRECT_URI = `${currentUrl}naverCallback`;
+    const STATE = "RANDOMSTATE";
+    const NAVER_AUTH_URL = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_NAVER_CLIENT_ID}&state=${STATE}&redirect_uri=${REDIRECT_URI}`;
+
+    window.location.href = NAVER_AUTH_URL;
+  };
+
+  const Logout = () => {
+    userStore?.reset();
+    Cookies.remove("accessToken");
+    Cookies.remove("refreshToken");
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center gap-3">
@@ -24,8 +46,16 @@ export default function ChatHeader() {
           <p className="text-sm text-gray-500">무엇이든 물어보세요!</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-xs text-gray-500">온라인</span>
+          {userStore?.data.id === "" ? (
+            <button
+              className="bg-[#03c75a] text-white px-4 py-2 rounded-md font-bold"
+              onClick={NaverLogin}
+            >
+              네이버 로그인하기
+            </button>
+          ) : (
+            <button onClick={Logout}>Logout</button>
+          )}
         </div>
       </div>
     </div>

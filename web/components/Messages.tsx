@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import FlakeId from "flake-idgen";
-import { useChat } from "../business/hooks/use-chat.hook";
 import { cn } from "../utils/utlis";
 import { MessageItem } from "./MessageItem";
+import { useChat } from "@/business/hooks/use-chat.hook";
 
 const flake = new FlakeId();
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useChat } from "@/business/hooks/use-chat.hook";
 import React, { useEffect, useRef } from "react";
-import { useChat } from "../business/hooks/use-chat.hook";
 
 export default function ChatInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
