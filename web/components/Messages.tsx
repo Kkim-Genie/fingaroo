@@ -3,6 +3,8 @@ import FlakeId from "flake-idgen";
 import { cn } from "../utils/utlis";
 import { MessageItem } from "./MessageItem";
 import { useChat } from "@/business/hooks/use-chat.hook";
+import { ToolMessage } from "@/app/types";
+import StockChart from "./StockChart";
 
 const flake = new FlakeId();
 
@@ -34,13 +36,22 @@ export function Messages() {
       )}
     >
       {messages.map((message) => {
-        return message.type === "human" || message.type === "ai" ? (
-          <MessageItem
-            key={message.id}
-            role={message.type}
-            content={message.content}
-          />
-        ) : undefined;
+        if (message.type === "human" || message.type === "ai") {
+          return (
+            <MessageItem
+              key={message.id}
+              role={message.type}
+              content={message.content}
+            />
+          );
+        }
+        if (
+          message.type === "tool" &&
+          (message as ToolMessage).tool_name === "search_stock_price"
+        ) {
+          const stockData = JSON.parse(message.content);
+          return <StockChart key={message.id} stockData={stockData} />;
+        }
       })}
 
       {/**로딩중일 경우 Dot Spinner 보여주기 */}
