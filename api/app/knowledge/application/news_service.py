@@ -5,6 +5,7 @@ from app.utils.id_utils import generate_nanoid
 from app.knowledge.domain.news import CreateNewsBodyElem
 from app.knowledge.application.embeddings_service import EmbeddingsService
 from app.knowledge.infra.db_models.embeddings import Embeddings
+import asyncio
 
 class NewsService:
     def __init__(
@@ -55,6 +56,9 @@ class NewsService:
             )
             db_news_list.append(db_news)
             embeddings_list.append(embeddings)
+            
+            # 0.2초 지연
+            await asyncio.sleep(0.3)
 
         self.news_repo.create_news(db_news_list)
         self.embeddings_service.create_many(embeddings_list)

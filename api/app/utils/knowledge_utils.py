@@ -17,10 +17,10 @@ def make_daily_report_prompt(date_string: str, contexts: str) -> str:
     💡 역할: 당신은 금융 시장을 분석하는 전문가입니다. 제공된 데이터를 기반으로 객관적이고 명확한 방식으로 증시 요약을 작성하세요.
 
     📌 **증시 요약**
-    다음의 데이터를 활용하여 "Fingoo 증시 요약"을 작성하세요. 제공된 데이터는 미국 증시 관련 뉴스 및 분석 자료입니다.
+    다음의 데이터를 활용하여 "Fingaroo 증시 요약"을 작성하세요. 제공된 데이터는 미국 증시 관련 뉴스 및 분석 자료입니다.
 
     ### 🔥 **보고서 작성 템플릿**:
-    【Fingoo 증시 요약 ｜{korean_date} ({weekdayKor}요일)】 
+    【Fingaroo 증시 요약 ｜{korean_date} ({weekdayKor}요일)】 
 
     📌 **1. 핵심 요점** ( ~ {date_string} 기준)
     - 주요 증시 변동 사항 (지수 상승/하락, 주요 원인)을 한 문장으로 요약하여 개조식으로 작성하세요.
@@ -41,11 +41,11 @@ def make_daily_report_prompt(date_string: str, contexts: str) -> str:
     📌 **5. 금일 주요 일정** ( ~ {date_string} 기준)
     - ★★★ 이상 일정만 추출하여 정리
 
-    ⚠ 가장 처음에 와야 할 글자는 "【Fingoo 증시 요약 ｜{korean_date} ({weekdayKor}요일)】" 이어야 합니다.
+    ⚠ 가장 처음에 와야 할 글자는 "【Fingaroo 증시 요약 ｜{korean_date} ({weekdayKor}요일)】" 이어야 합니다.
     ⚠ 반드시 주어진 데이터만을 사용하여 작성하세요. 추가적인 가정이나 창작은 하지 마세요.  
     ⚠ 정보의 출처를 절대 기입하지 마세요.  
 
-    ⚠ 본 Fingoo 증시 레포트는 공신력 있는 자료를 기반으로 하여 Fingoo 인공지능(AI) 기술을 사용하여 생성되었습니다."를 마지막에 출력해줘.
+    ⚠ 본 Fingaroo 증시 레포트는 공신력 있는 자료를 기반으로 하여 Fingaroo 인공지능(AI) 기술을 사용하여 생성되었습니다."를 마지막에 출력해줘.
 
     contexts : 
     {contexts}
@@ -60,7 +60,7 @@ def make_weekly_report_prompt(end_date:str, news_contexts:str, market_contexts:s
     역할: 당신은 금융 시장을 분석하는 전문가입니다. 제공된 데이터를 기반으로 객관적이고 명확한 방식으로 주간 증시 요약을 작성하세요.
 
     📌 **주간 증시 요약**
-    다음의 데이터를 활용하여 "Fingoo 주간 증시 요약"을 작성하세요. 제공된 데이터는 {start_date} ~ {end_date} 기간 동안의 미국 증시 관련 뉴스 및 분석 자료입니다.
+    다음의 데이터를 활용하여 "Fingaroo 주간 증시 요약"을 작성하세요. 제공된 데이터는 {start_date} ~ {end_date} 기간 동안의 미국 증시 관련 뉴스 및 분석 자료입니다.
 
     📌 **보고서 기간**: {start_date} ~ {end_date}
 
@@ -70,7 +70,7 @@ def make_weekly_report_prompt(end_date:str, news_contexts:str, market_contexts:s
     ⚠ **정보의 정확성을 유지하며, 지나치게 극적인 표현은 피하세요.**  
     ⚠ **정보의 출처를 절대 기입하지 마세요.**  
 
-    " ⚠ 본 Fingoo 주간 증시 레포트는 공신력 있는 자료를 기반으로 Fingoo AI 기술을 사용하여 생성되었습니다."를 마지막에 출력해 주세요.
+    " ⚠ 본 Fingaroo 주간 증시 레포트는 공신력 있는 자료를 기반으로 Fingaroo AI 기술을 사용하여 생성되었습니다."를 마지막에 출력해 주세요.
 
     위 포멧에 맞춰서 {start_date} ~ {end_date} 기간의 아래 'context' 데이터를 참고하여 주간 시황을 작성하세요.
     시황 데이터 context: {market_contexts}

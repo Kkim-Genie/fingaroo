@@ -164,93 +164,102 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
   async loadNateNews(): Promise<News[]> {
     try {
       const results: News[] = [];
-      let current = dayjs();
-      let start = dayjs("2025-05-01");
+
+      const apiUrl = `${process.env.AI_ADMIN_URL}/news/nate/latest`;
+      const response = await this.api.axiosRef.get(apiUrl);
+      const latestDate: string = response.data; // YYYY-MM-DD
+
+      let current = dayjs(latestDate).add(1, "day");
       let today = dayjs().tz("Asia/Seoul");
       let idx = 0;
 
-      let pageNum = 1;
+      let i = 0;
+      while (current <= today && i++ < 1) {
+        console.log("crawl", current.format("YYYY-MM-DD"));
+        let pageNum = 1;
+        while (pageNum <= 1) {
+          const url = `https://news.nate.com/subsection?cate=eco01&mid=n0305&type=c&date=${current.format("YYYYMMDD")}&page=${pageNum}`;
+          const iconv = require("iconv-lite");
+
+          try {
+            const response = await this.api.axiosRef.get(url, {
+              responseType: "arraybuffer",
+              responseEncoding: "binary",
+              headers: {
+                "User-Agent":
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+                "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+                Accept:
+                  "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+                Referer: "https://www.google.com/",
+              },
+            });
+
+            const html = iconv.decode(Buffer.from(response.data), "EUC-KR");
+            const $ = cheerio.load(html);
+            const titles: NateNewsTitle[] = [];
+
+            // 현재 페이지에서 바로 제목과 링크 추출
+            $(".mduSubjectList div a").each((i, element) => {
+              const $element = $(element);
+              const link = $element.attr("href") || "";
+              const title = $element.find("span.tb h2.tit").text().trim();
+
+              if (title && link) {
+                titles.push({ idx: idx, title, link });
+                idx++;
+              }
+            });
+
+            for (const title of titles) {
+              const link = "https:" + title.link;
+              try {
+                const detailRes = await axios.get(link, {
+                  responseType: "arraybuffer",
+                  headers: {
+                    "User-Agent":
+                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+                  },
+                });
+                const detailHtml = iconv.decode(detailRes.data, "euc-kr");
+                const $$ = cheerio.load(detailHtml);
+
+                // 🔹 본문 텍스트 (p 태그 + textNode 합침)
+                let content = "";
+                $$("#realArtcContents")
+                  .contents()
+                  .each((i, el) => {
+                    if (el.type === "text") {
+                      content += $$(el).text().trim();
+                    } else if (el.type === "tag" && el.name === "p") {
+                      content += $$(el).text().trim();
+                    }
+                  });
+
+                results.push({
+                  date: current.format("YYYY-MM-DD"),
+                  title: title.title,
+                  link: title.link,
+                  content: content.trim(),
+                  type: "nate",
+                });
+              } catch (e) {
+                console.error(`본문 크롤링 실패: ${title.link}`, e.message);
+              }
+            }
+
+            pageNum++;
+          } catch (error) {
+            this.logger.error(
+              `Error processing page ${pageNum}: ${error.message}`
+            );
+            break;
+          }
+        }
+        current = current.add(1, "day");
+      }
 
       // 페이지를 순차적으로 처리하면서 바로 제목과 링크 추출
-      while (pageNum <= 2) {
-        const url = `https://news.nate.com/subsection?cate=eco01&mid=n0305&type=c&date=${current.format("YYYYMMDD")}&page=${pageNum}`;
-        const iconv = require("iconv-lite");
-
-        try {
-          const response = await this.api.axiosRef.get(url, {
-            responseType: "arraybuffer",
-            responseEncoding: "binary",
-            headers: {
-              "User-Agent":
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-              "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
-              Accept:
-                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-              Referer: "https://www.google.com/",
-            },
-          });
-
-          const html = iconv.decode(Buffer.from(response.data), "EUC-KR");
-          const $ = cheerio.load(html);
-          const titles: NateNewsTitle[] = [];
-
-          // 현재 페이지에서 바로 제목과 링크 추출
-          $(".mduSubjectList div a").each((i, element) => {
-            const $element = $(element);
-            const link = $element.attr("href") || "";
-            const title = $element.find("span.tb h2.tit").text().trim();
-
-            if (title && link) {
-              titles.push({ idx: idx, title, link });
-              idx++;
-            }
-          });
-
-          for (const title of titles) {
-            const link = "https:" + title.link;
-            try {
-              const detailRes = await axios.get(link, {
-                responseType: "arraybuffer",
-                headers: {
-                  "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-                },
-              });
-              const detailHtml = iconv.decode(detailRes.data, "euc-kr");
-              const $$ = cheerio.load(detailHtml);
-
-              // 🔹 본문 텍스트 (p 태그 + textNode 합침)
-              let content = "";
-              $$("#realArtcContents")
-                .contents()
-                .each((i, el) => {
-                  if (el.type === "text") {
-                    content += $$(el).text().trim();
-                  } else if (el.type === "tag" && el.name === "p") {
-                    content += $$(el).text().trim();
-                  }
-                });
-
-              results.push({
-                date: current.format("YYYY-MM-DD"),
-                title: title.title,
-                link: title.link,
-                content: content.trim(),
-                type: "nate",
-              });
-            } catch (e) {
-              console.error(`본문 크롤링 실패: ${title.link}`, e.message);
-            }
-          }
-
-          pageNum++;
-        } catch (error) {
-          this.logger.error(
-            `Error processing page ${pageNum}: ${error.message}`
-          );
-          break;
-        }
-      }
 
       return results;
     } catch (error) {
