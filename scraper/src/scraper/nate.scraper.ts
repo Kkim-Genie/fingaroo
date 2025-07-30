@@ -13,11 +13,11 @@ export class NateScraper {
 
   async scrape(): Promise<void> {
     const news = await this.newsManager.loadNateNews();
+    const apiUrl = `${process.env.AI_ADMIN_URL}/news`;
 
-    // const apiUrl = `${process.env.AI_ADMIN_URL}/news`;
     try {
-      //   const response = await this.httpService.axiosRef.post(apiUrl, { news });
-      //   console.log('POST response:', response.data);
+      const response = await this.httpService.axiosRef.post(apiUrl, { news });
+      console.log("POST response:", response.data);
     } catch (error) {
       console.error("POST error:", error);
     }

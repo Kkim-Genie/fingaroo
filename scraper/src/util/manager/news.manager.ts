@@ -11,6 +11,8 @@ import puppeteer from "puppeteer";
 import { NateNewsTitle, News } from "../type/news.type";
 import { HttpService } from "@nestjs/axios";
 import * as cheerio from "cheerio";
+import axios from "axios";
+import * as iconv from "iconv-lite";
 
 // Extend dayjs with plugins
 dayjs.extend(utc);
@@ -163,16 +165,21 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
     try {
       const results: News[] = [];
       let current = dayjs();
+      let start = dayjs("2025-05-01");
+      let today = dayjs().tz("Asia/Seoul");
+      let idx = 0;
 
-      const titles: NateNewsTitle[] = [];
       let pageNum = 1;
 
       // 페이지를 순차적으로 처리하면서 바로 제목과 링크 추출
-      while (true) {
+      while (pageNum <= 2) {
         const url = `https://news.nate.com/subsection?cate=eco01&mid=n0305&type=c&date=${current.format("YYYYMMDD")}&page=${pageNum}`;
+        const iconv = require("iconv-lite");
 
         try {
           const response = await this.api.axiosRef.get(url, {
+            responseType: "arraybuffer",
+            responseEncoding: "binary",
             headers: {
               "User-Agent":
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
@@ -181,16 +188,11 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
                 "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
               Referer: "https://www.google.com/",
             },
-            responseType: "text",
-            responseEncoding: "utf8",
           });
 
-          const $ = cheerio.load(response.data);
-
-          // "No List" 체크 - 더 이상 페이지가 없으면 중단
-          if ($(".mduNoList").length > 0) {
-            break;
-          }
+          const html = iconv.decode(Buffer.from(response.data), "EUC-KR");
+          const $ = cheerio.load(html);
+          const titles: NateNewsTitle[] = [];
 
           // 현재 페이지에서 바로 제목과 링크 추출
           $(".mduSubjectList div a").each((i, element) => {
@@ -199,11 +201,48 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
             const title = $element.find("span.tb h2.tit").text().trim();
 
             if (title && link) {
-              titles.push({ idx: i, title, link });
+              titles.push({ idx: idx, title, link });
+              idx++;
             }
           });
 
-          console.log("page", pageNum, "finished");
+          for (const title of titles) {
+            const link = "https:" + title.link;
+            try {
+              const detailRes = await axios.get(link, {
+                responseType: "arraybuffer",
+                headers: {
+                  "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+                },
+              });
+              const detailHtml = iconv.decode(detailRes.data, "euc-kr");
+              const $$ = cheerio.load(detailHtml);
+
+              // 🔹 본문 텍스트 (p 태그 + textNode 합침)
+              let content = "";
+              $$("#realArtcContents")
+                .contents()
+                .each((i, el) => {
+                  if (el.type === "text") {
+                    content += $$(el).text().trim();
+                  } else if (el.type === "tag" && el.name === "p") {
+                    content += $$(el).text().trim();
+                  }
+                });
+
+              results.push({
+                date: current.format("YYYY-MM-DD"),
+                title: title.title,
+                link: title.link,
+                content: content.trim(),
+                type: "nate",
+              });
+            } catch (e) {
+              console.error(`본문 크롤링 실패: ${title.link}`, e.message);
+            }
+          }
+
           pageNum++;
         } catch (error) {
           this.logger.error(
@@ -212,67 +251,6 @@ export class NewsManager implements OnModuleDestroy, OnModuleInit {
           break;
         }
       }
-
-      // 뉴스 개수를 제한하여 요청 크기 조절
-      const limitedTitles = titles.slice(0, 100); // 최대 100개로 제한
-      const maxSelectCount = Math.min(limitedTitles.length, 30);
-
-      const aiBody = {
-        messages: [
-          {
-            role: "system",
-            content: "- 친절하게 답변하는 AI 어시스턴트입니다.",
-          },
-          {
-            role: "user",
-            content: `아래의 뉴스 제목들을 보고 가장 중요해 보이는 ${maxSelectCount}개를 선정해줘. 선정 결과는 selectedIndexes 배열에 숫자로 제공해주면 돼\n${limitedTitles.map((title) => `idx:${title.idx} title:${title.title}`).join("\n")}`,
-          },
-        ],
-        topP: 0.8,
-        topK: 0,
-        temperature: 0.5,
-        repetitionPenalty: 1.1,
-        thinking: {
-          effort: "none",
-        },
-        responseFormat: {
-          type: "json",
-          schema: {
-            type: "object",
-            properties: {
-              selectedIndexes: {
-                type: "array",
-                description: "선택된 뉴스 인덱스 배열",
-                minItems: maxSelectCount,
-                maxItems: maxSelectCount,
-                items: {
-                  type: "integer",
-                },
-              },
-            },
-            required: ["selectedIndexes"],
-          },
-        },
-      };
-
-      console.log("titles", titles.length);
-
-      // Clova Studio API 호출
-      const clovaResponse = await this.api.axiosRef.post(
-        "https://clovastudio.stream.ntruss.com/v3/chat-completions/HCX-007",
-        aiBody,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.CLOVA_API_KEY}`,
-            "X-NCP-CLOVASTUDIO-REQUEST-ID": `news-selection-${Date.now()}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const responseContent = clovaResponse.data.result.message.content;
-      const selectedIndexes = JSON.parse(responseContent).selectedIndexes;
-      console.log("selectedIndexes", selectedIndexes);
 
       return results;
     } catch (error) {
