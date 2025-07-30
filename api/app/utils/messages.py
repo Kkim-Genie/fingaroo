@@ -138,6 +138,9 @@ async def _stream_graph_internal(
             yield f"data:{json.dumps(chat_dict, ensure_ascii=False)}\n\n"
         elif(type=="messages" and agent_name == "answer_agent"):
             chat_dict["answer"] += metadata[0].content  # type: ignore
+            chat_dict["messages"] = convert_messages_to_dict(
+                messages+[AIMessage(content=chat_dict["answer"], name="answer_agent")]
+            )
             yield f"data:{json.dumps(chat_dict, ensure_ascii=False)}\n\n"
 
 async def stream_graph(
