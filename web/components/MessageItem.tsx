@@ -36,7 +36,7 @@ export const MessageItem = ({ role, content }: MessageProps) => {
     >
       <div
         className={cn(
-          "flex w-auto max-w-[95%] justify-start rounded-lg bg-[#FFF2E9] px-5 py-3 text-black drop-shadow-fingoo"
+          "flex w-auto max-w-[95%] justify-start rounded-lg bg-[#FFF2E9] px-5 py-3 text-black "
         )}
       >
         <div className={cn("flex flex-col", styles.markdownContent)}>
