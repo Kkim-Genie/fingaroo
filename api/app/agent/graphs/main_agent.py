@@ -6,6 +6,7 @@ from app.agent.graphs.dart_agent import dart_agent
 from app.agent.graphs.answer_agent import answer_agent
 from app.agent.graphs.stock_price_agent import stock_price_agent
 from app.agent.graphs.invest_log_agent import invest_log_agent, invest_read_node, invest_create_node, invest_update_node, invest_delete_node
+from app.agent.graphs.invest_feedback_agent import invest_feedback_agent, load_invest_log_node, load_price_node
 from app.config import get_settings
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -21,7 +22,7 @@ members = [
     "dart_agent",
     "stock_price_agent",
 ]
-options_for_next = ["answer_agent", "search_routing_agent", "invest_log_agent"] + members
+options_for_next = ["answer_agent", "search_routing_agent", "invest_log_agent", "invest_feedback_agent"] + members
 
 system_prompt = f"""
     You are a supervisor tasked with managing a conversation between the
@@ -34,6 +35,7 @@ system_prompt = f"""
     search_routing_agent: 경제 관련 데이터를 검색하는 agent입니다. 뉴스와 시황, 그리고 지식베이스에서 검색을 포함합니다.
     stock_price_agent: 주식 가격을 검색하는 agent입니다.
     invest_log_agent: 매매일지를 관리하는 agent입니다.
+    invest_feedback_agent: 매매일지를 기반으로 피드백을 제공하는 agent입니다.
 """
 
 prompt = ChatPromptTemplate.from_messages(
@@ -146,6 +148,10 @@ def main_agent():
     workflow.add_node("invest_update_node", invest_update_node)
     workflow.add_node("invest_delete_node", invest_delete_node)
 
+    workflow.add_node("load_invest_log_node", load_invest_log_node)
+    workflow.add_node("load_price_node", load_price_node)
+    workflow.add_node("invest_feedback_agent", invest_feedback_agent)
+
     for member in members:
         workflow.add_edge(member, "Supervisor")
 
@@ -153,6 +159,7 @@ def main_agent():
     conditional_map["answer_agent"] = "answer_agent"
     conditional_map["search_routing_agent"] = "search_routing_agent"
     conditional_map["invest_log_agent"] = "invest_log_agent"
+    conditional_map["invest_feedback_agent"] = "load_invest_log_node"
 
     def get_next(state):
         return state["next"]
@@ -201,6 +208,10 @@ def main_agent():
 
     workflow.add_edge(START, "Supervisor")
     workflow.add_edge("answer_agent", END)
+
+    workflow.add_edge("load_invest_log_node", "load_price_node")
+    workflow.add_edge("load_price_node", "invest_feedback_agent")
+    workflow.add_edge("invest_feedback_agent", "Supervisor")
 
     graph = workflow.compile(checkpointer=checkpointer)
 
