@@ -18,7 +18,7 @@ export const MessageItem = ({ role, content }: MessageProps) => {
       >
         <div
           className={cn(
-            "flex w-auto max-w-80 justify-end rounded-lg bg-black px-5 py-3 text-white lg:max-w-96"
+            "flex w-auto max-w-80 justify-end rounded-lg bg-[#043b72] px-5 py-3 text-white lg:max-w-96"
           )}
         >
           <div className="flex font-pretendard text-sm font-semibold">
@@ -36,7 +36,7 @@ export const MessageItem = ({ role, content }: MessageProps) => {
     >
       <div
         className={cn(
-          "flex w-auto max-w-[95%] justify-start rounded-lg bg-white px-5 py-3 text-black drop-shadow-fingoo"
+          "flex w-auto max-w-[95%] justify-start rounded-lg bg-[#FFF2E9] px-5 py-3 text-black drop-shadow-fingoo"
         )}
       >
         <div className={cn("flex flex-col", styles.markdownContent)}>

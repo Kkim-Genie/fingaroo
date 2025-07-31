@@ -42,10 +42,13 @@ export const useFingarooChat = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+    directInput?: string
+  ) => {
     e.preventDefault();
 
-    const currentInput = input;
+    const currentInput = directInput || input;
     setInput("");
     setIsLoading(true);
 

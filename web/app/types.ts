@@ -42,7 +42,10 @@ export interface ChatProviderProps {
   isLoading: boolean;
   input: string;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  handleSubmit: (
+    e: React.FormEvent<HTMLFormElement>,
+    directInput?: string
+  ) => void;
   setInput: (input: string) => void;
 }
 

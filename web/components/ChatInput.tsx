@@ -24,7 +24,7 @@ export default function ChatInput() {
             value={input}
             onChange={handleInputChange}
             rows={1}
-            className="w-full resize-none overflow-y-auto border-none p-0 px-1 text-lg scrollbar-thin focus:border-white focus:shadow-none focus:ring-0"
+            className="w-full resize-none overflow-y-auto border-none p-0 px-1 text-lg scrollbar-thin focus:border-none focus:outline-none focus:shadow-none focus:ring-0"
             placeholder="무엇이든 물어보세요."
             disabled={isLoading}
             style={{
@@ -56,7 +56,7 @@ export default function ChatInput() {
         <button
           type="submit"
           disabled={!input.trim() || isLoading}
-          className="flex-shrink-0 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 p-3 text-white shadow-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+          className="flex-shrink-0 rounded-full bg-gradient-to-r from-[#FFA17C] to-[#FFB38F] p-3 text-white shadow-lg hover:from-[#FFA060] hover:to-[#FFA162] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
         >
           <svg
             className="h-5 w-5"

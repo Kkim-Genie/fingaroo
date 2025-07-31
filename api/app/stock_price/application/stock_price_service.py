@@ -52,7 +52,7 @@ class StockPriceService:
             stock_name=items[0]["itmsNm"],
             stock_code=items[0]["srtnCd"],
             current_price=current_price,
-            change_amount=current_price - prev_close,
+            change_price=current_price - prev_close,
             change_rate=((current_price - prev_close) / prev_close) * 100,
             unit="KRW",
             items=[StockPriceItem(

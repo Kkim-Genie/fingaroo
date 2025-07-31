@@ -3,7 +3,10 @@
 import useCustomStore from "@/store/useCustomStore";
 import useUserStore from "@/store/useUserStore";
 import Cookies from "js-cookie";
+import Image from "next/image";
 import React from "react";
+import logo from "@/assets/fingaroo_logo.png";
+import { Avatar, Menu } from "@mantine/core";
 
 export default function ChatHeader() {
   const userStore = useCustomStore(useUserStore, (state) => state);
@@ -26,24 +29,22 @@ export default function ChatHeader() {
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-          <svg
-            className="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-            />
-          </svg>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center">
+          <Image className="rounded-full" src={logo} alt="logo" />
         </div>
-        <div>
-          <h1 className="text-lg font-semibold text-gray-900">AI 어시스턴트</h1>
-          <p className="text-sm text-gray-500">무엇이든 물어보세요!</p>
+        <div className="flex flex-col -gap-1">
+          <h1
+            className="text-lg font-bold text-[#FFA162]"
+            style={{ fontFamily: "Batang, serif" }}
+          >
+            Fingaroo
+          </h1>
+          <p
+            className="text-sm text-[#FFA060] -mt-1"
+            style={{ fontFamily: "Batang, serif" }}
+          >
+            your finance buddy
+          </p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           {userStore?.data.id === "" ? (
@@ -54,7 +55,84 @@ export default function ChatHeader() {
               네이버 로그인하기
             </button>
           ) : (
-            <button onClick={Logout}>Logout</button>
+            <Menu shadow="md" width={280} position="bottom-end" offset={5}>
+              <Menu.Target>
+                <Avatar
+                  className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                  size="md"
+                  color="orange"
+                />
+              </Menu.Target>
+              <Menu.Dropdown className="border border-gray-200 rounded-lg shadow-xl">
+                {/* User Info Section */}
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <Avatar size="lg" color="orange" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {userStore?.data.name || "사용자"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {userStore?.data.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Menu Items */}
+                <div className="py-1">
+                  <Menu.Item
+                    className="hover:bg-gray-50 transition-colors duration-150"
+                    onClick={() => {
+                      // Add trading journal functionality here if needed
+                    }}
+                  >
+                    <div className="flex items-center gap-3 px-2 py-1">
+                      <span className="text-gray-500">📊</span>
+                      <span className="text-sm text-gray-700">매매일지</span>
+                    </div>
+                  </Menu.Item>
+
+                  <Menu.Item
+                    className="hover:bg-gray-50 transition-colors duration-150"
+                    onClick={() => {
+                      // Add profile edit functionality here if needed
+                    }}
+                  >
+                    <div className="flex items-center gap-3 px-2 py-1">
+                      <span className="text-gray-500">👤</span>
+                      <span className="text-sm text-gray-700">프로필 설정</span>
+                    </div>
+                  </Menu.Item>
+
+                  <Menu.Item
+                    className="hover:bg-gray-50 transition-colors duration-150"
+                    onClick={() => {
+                      // Add preferences functionality here if needed
+                    }}
+                  >
+                    <div className="flex items-center gap-3 px-2 py-1">
+                      <span className="text-gray-500">⚙️</span>
+                      <span className="text-sm text-gray-700">환경설정</span>
+                    </div>
+                  </Menu.Item>
+
+                  <Menu.Divider />
+
+                  <Menu.Item
+                    className="hover:bg-red-50 transition-colors duration-150"
+                    onClick={Logout}
+                  >
+                    <div className="flex items-center gap-3 px-2 py-1">
+                      <span className="text-red-500">🚪</span>
+                      <span className="text-sm text-red-600 font-medium">
+                        로그아웃
+                      </span>
+                    </div>
+                  </Menu.Item>
+                </div>
+              </Menu.Dropdown>
+            </Menu>
           )}
         </div>
       </div>
