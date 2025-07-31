@@ -5,12 +5,18 @@ import { MessageItem } from "./MessageItem";
 import { useChat } from "@/business/hooks/use-chat.hook";
 import { ToolMessage } from "@/app/types";
 import StockChart from "./StockChart";
+import { useUserAsset } from "@/business/hooks/use-user-asset.hook";
+import { useInvestLog } from "@/business/hooks/use-invest-log.hook";
 
 const flake = new FlakeId();
 
 /**chatbot과 한 대화내용들을 보여주는 컴포넌트  */
 export function Messages() {
   const { messages, isLoading } = useChat();
+
+  const { fetchUserAssets } = useUserAsset();
+  const { fetchInvestLogs } = useInvestLog();
+
   const [sessionId, setSessionId] = useState<number | null>(null);
   const Chatref = useRef<HTMLDivElement | null>(null);
 
@@ -27,6 +33,11 @@ export function Messages() {
     //새로운 메시지가 추가됐을때 맨 아래로 스크롤을 내림
     Chatref.current?.scrollIntoView({ behavior: "auto" });
   }, [lastMessageContent]);
+
+  useEffect(() => {
+    fetchUserAssets();
+    fetchInvestLogs();
+  }, []);
 
   if (messages.length === 0) {
     return (

@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import React from "react";
 import dayjs from "dayjs";
 import { ApexOptions } from "apexcharts";
+import useInvestLogStore from "@/store/useInvestLogStore";
+import useUserAssetStore from "@/store/useUserAssetStore";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -34,6 +36,31 @@ interface StockChartProps {
 }
 
 const StockChart = ({ stockData }: StockChartProps) => {
+  const { data: investLogs } = useInvestLogStore();
+  const { data: userAssets } = useUserAssetStore();
+
+  const stock_code = stockData.stock_code;
+
+  const investLog = investLogs.filter((log) => log.stock_code === stock_code);
+  const userAsset = userAssets.find((asset) => asset.stock_code === stock_code);
+
+  // 매수평균가 계산
+  const calculateAveragePrice = () => {
+    const buyLogs = investLog.filter((log) => log.action === "매수");
+
+    if (buyLogs.length === 0) return 0;
+
+    const totalCost = buyLogs.reduce(
+      (sum, log) => sum + log.price * log.amount,
+      0
+    );
+    const totalAmount = buyLogs.reduce((sum, log) => sum + log.amount, 0);
+
+    return totalAmount > 0 ? totalCost / totalAmount : 0;
+  };
+
+  const averagePrice = calculateAveragePrice();
+
   const options: ApexOptions = {
     chart: {
       type: "candlestick",
@@ -121,6 +148,43 @@ const StockChart = ({ stockData }: StockChartProps) => {
     },
   };
 
+  // Add annotations for average price and invest logs
+  options.annotations = {};
+
+  if (averagePrice > 0) {
+    options.annotations.yaxis = [
+      {
+        y: averagePrice,
+        borderColor: "#00E396",
+        label: {
+          borderColor: "#00E396",
+          style: {
+            color: "#fff",
+            background: "#00E396",
+          },
+          text: "매수평균가",
+        },
+      },
+    ];
+  }
+
+  if (investLog.length > 0) {
+    options.annotations.points = investLog.map((log) => ({
+      x: dayjs(log.date).valueOf(),
+      y: log.price,
+      marker: {
+        size: 5,
+        borderColor: log.action === "매수" ? "#00E396" : "#A50E5E",
+        fillColor: log.action === "매수" ? "#00E396" : "#A50E5E",
+        strokeWidth: 0,
+      },
+      label: {
+        borderColor: log.action === "매수" ? "#00E396" : "#A50E5E",
+        text: log.action === "매수" ? "매수" : "매도",
+      },
+    }));
+  }
+
   const stockSeries = [
     {
       data: [
@@ -146,6 +210,9 @@ const StockChart = ({ stockData }: StockChartProps) => {
       <div className="flex items-center gap-1 text-lg font-bold ml-2">
         {stockData.stock_name}{" "}
         <p className="text-sm font-normal">({stockData.stock_code})</p>
+        {userAsset && (
+          <p className="text-sm font-normal">{userAsset.amount}주 보유중</p>
+        )}
       </div>
       <ReactApexChart
         options={options}
