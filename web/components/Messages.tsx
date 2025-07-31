@@ -31,7 +31,7 @@ export function Messages() {
   return (
     <div
       className={cn(
-        "lg:flex lg:h-full lg:flex-col lg:justify-end lg:space-y-5 lg:p-3",
+        "lg:flex lg:flex-col lg:justify-end lg:space-y-5 lg:p-3",
         "space-y-6 p-2"
       )}
     >

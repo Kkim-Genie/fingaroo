@@ -7,6 +7,8 @@ from typing import Sequence
 
 class GraphState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
+    query: Annotated[str, ""]
+    search_date: Annotated[str, ""]
     answer: Annotated[str, ""]
     remaining_steps: RemainingSteps
     is_last_step: IsLastStep

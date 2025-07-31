@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Literal
 from app.agent.states.basic_state import GraphState
-from app.agent.graphs.search_agent import search_agent
+from app.agent.graphs.search_agent import search_routing_agent, search_news_node, search_daily_report_node, search_knowledge_base_node, generate_search_result_answer_node, check_search_answer_relevent_node, search_query_rewrite_node
 from app.agent.graphs.dart_agent import dart_agent
 from app.agent.graphs.answer_agent import answer_agent
 from app.agent.graphs.stock_price_agent import stock_price_agent
@@ -17,11 +17,10 @@ settings = get_settings()
 checkpointer = MemorySaver()
 
 members = [
-    "search_agent",
     "dart_agent",
     "stock_price_agent",
 ]
-options_for_next = ["answer_agent"] + members
+options_for_next = ["answer_agent", "search_routing_agent"] + members
 
 system_prompt = f"""
     You are a supervisor tasked with managing a conversation between the
@@ -29,6 +28,10 @@ system_prompt = f"""
     respond with the worker to act next. Each worker will perform a
     task and respond with their results and status. 
     When finished or there is no need to call any worker, respond with *answer_agent*.
+
+    추가 worker 설명
+    search_routing_agent: 경제 관련 데이터를 검색하는 agent입니다. 뉴스와 시황, 그리고 지식베이스에서 검색을 포함합니다.
+    stock_price_agent: 주식 가격을 검색하는 agent입니다.
 """
 
 prompt = ChatPromptTemplate.from_messages(
@@ -73,6 +76,7 @@ def supervisor(state: GraphState):
                     "next": {
                         "type": "string",
                         "description": "The next agent to call",
+                        "enum": options_for_next
                     }
                 }
             },
@@ -121,21 +125,56 @@ def main_agent():
     workflow = StateGraph(GraphState)
 
     workflow.add_node("Supervisor", supervisor)
-    workflow.add_node("search_agent", search_agent)
+    workflow.add_node("search_routing_agent", search_routing_agent)
     workflow.add_node("dart_agent", dart_agent)
     workflow.add_node("answer_agent", answer_agent)
     workflow.add_node("stock_price_agent", stock_price_agent)
+
+    workflow.add_node("search_news_node", search_news_node)
+    workflow.add_node("search_daily_report_node", search_daily_report_node)
+    workflow.add_node("search_knowledge_base_node", search_knowledge_base_node)
+
+    workflow.add_node("generate_search_result_answer_node", generate_search_result_answer_node)
+    workflow.add_node("check_search_answer_relevent_node", check_search_answer_relevent_node)
+    workflow.add_node("search_query_rewrite_node", search_query_rewrite_node)
 
     for member in members:
         workflow.add_edge(member, "Supervisor")
 
     conditional_map = {k: k for k in members}
     conditional_map["answer_agent"] = "answer_agent"
+    conditional_map["search_routing_agent"] = "search_routing_agent"
 
     def get_next(state):
         return state["next"]
 
     workflow.add_conditional_edges("Supervisor", get_next, conditional_map)
+
+    def get_task(state):
+        return state["task"]
+
+    workflow.add_conditional_edges("search_routing_agent", get_task, {
+        "news": "search_news_node",
+        "daily_report": "search_daily_report_node",
+        "knowledge_base": "search_knowledge_base_node",
+    })
+
+    workflow.add_edge("search_news_node", "generate_search_result_answer_node")
+    workflow.add_edge("search_daily_report_node", "generate_search_result_answer_node")
+    workflow.add_edge("search_knowledge_base_node", "generate_search_result_answer_node")
+
+    workflow.add_edge("generate_search_result_answer_node", "check_search_answer_relevent_node")
+
+    def get_answer(state):
+        return state["answer"]
+
+    workflow.add_conditional_edges("check_search_answer_relevent_node", get_answer, {
+        "yes": "Supervisor",
+        "no": "search_query_rewrite_node",
+    })
+
+    workflow.add_edge("search_query_rewrite_node", "search_routing_agent")
+
 
     workflow.add_edge(START, "Supervisor")
     workflow.add_edge("answer_agent", END)

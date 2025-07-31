@@ -44,6 +44,7 @@ async def chat_first(request: ChatFirstRequest):
     
     inputs = GraphState(
         messages=messages,
+        query=request.query,
         remaining_steps=25,
         is_last_step=False,
         answer=""
@@ -64,6 +65,7 @@ async def chat_continue(request: ChatContinueRequest):
 
     input = {
         "messages": saved_state.values["messages"] + [HumanMessage(content=request.query)],
+        "query": request.query,
         "answer":""
     }
 
