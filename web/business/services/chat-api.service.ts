@@ -1,3 +1,9 @@
+export interface FirstChatApiRequest {
+  query: string;
+  access_token: string;
+  refresh_token: string;
+}
+
 export interface ChatApiRequest {
   query: string;
   thread_id?: string;
@@ -11,7 +17,7 @@ export interface InterruptRequest {
 const API_PATH = process.env.NEXT_PUBLIC_API_PATH || "http://localhost:8000";
 
 export class ChatApiService {
-  static async sendFirstChat(request: ChatApiRequest): Promise<Response> {
+  static async sendFirstChat(request: FirstChatApiRequest): Promise<Response> {
     const response = await fetch(`${API_PATH}/chat/first`, {
       method: "POST",
       headers: {
@@ -19,6 +25,8 @@ export class ChatApiService {
       },
       body: JSON.stringify({
         query: request.query,
+        access_token: request.access_token,
+        refresh_token: request.refresh_token,
       }),
     });
 

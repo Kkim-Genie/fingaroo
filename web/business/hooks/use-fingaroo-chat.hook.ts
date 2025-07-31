@@ -4,6 +4,7 @@ import { Interrupt, useInterrupt } from "./use-interrupt.hook";
 import { MessageUtils } from "../utils/message-utils";
 import { ChatApiService } from "../services/chat-api.service";
 import { StreamProcessor } from "../services/stream-processor.service";
+import Cookies from "js-cookie";
 
 /**Chatbot이용 및 대화를 통해 수치적 가이던스에 영향을 주는 훅 */
 export const useFingarooChat = () => {
@@ -59,9 +60,14 @@ export const useFingarooChat = () => {
 
       let response: Response;
 
+      const accessToken = Cookies.get("accessToken");
+      const refreshToken = Cookies.get("refreshToken");
+
       if (messages.length === 0) {
         response = await ChatApiService.sendFirstChat({
           query: currentInput,
+          access_token: accessToken || "",
+          refresh_token: refreshToken || "",
         });
       } else {
         response = await ChatApiService.sendContinueChat({

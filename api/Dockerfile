@@ -3,9 +3,9 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copy necessary files
-COPY apps/ai/pyproject.toml .
-COPY apps/ai/main.py .
-COPY apps/ai/app app/
+COPY pyproject.toml .
+COPY main.py .
+COPY app app/
 
 
 # Install uv
@@ -19,7 +19,7 @@ RUN pip install playwright
 RUN playwright install --with-deps
 
 # Expose the port
-EXPOSE 8001
+EXPOSE 8000
 
 # Command to run the application
 CMD ["uv", "run", "main.py"]

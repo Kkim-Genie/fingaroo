@@ -37,9 +37,11 @@ export default function RootLayout({
       >
         <MantineProvider>
           <ChatProvider>
-            <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+            <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-y-hidden">
               <ChatHeader />
-              <div className="h-full">{children}</div>
+              <div className="flex flex-1 w-full overflow-y-auto overflow-x-hidden">
+                {children}
+              </div>
             </div>
           </ChatProvider>
         </MantineProvider>

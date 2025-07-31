@@ -14,3 +14,6 @@ class DartCorpCodeService:
 
     def find_by_corp_name(self, corp_name: str) -> DartCorpCode:
         return self.corp_code_repo.find_by_corp_name(corp_name)
+
+    def find_by_corp_code(self, corp_code: str) -> DartCorpCode:
+        return self.corp_code_repo.find_by_corp_code(corp_code)

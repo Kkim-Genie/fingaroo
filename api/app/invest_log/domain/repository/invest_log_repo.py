@@ -16,5 +16,9 @@ class IInvestLogRepository(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    def find_by_id(self, invest_log_id: str) -> InvestLog:
+        raise NotImplementedError
+
+    @abstractmethod
     def delete_invest_log(self, invest_log_id: str):
         raise NotImplementedError

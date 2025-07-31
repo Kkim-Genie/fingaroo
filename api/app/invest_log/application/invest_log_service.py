@@ -14,6 +14,9 @@ class InvestLogService:
     def search_by_user_id(self, user_id: str) -> list[InvestLog]:
         return self.invest_log_repo.search_by_user_id(user_id)
 
+    def find_by_id(self, invest_log_id: str) -> InvestLog:
+        return self.invest_log_repo.find_by_id(invest_log_id)
+
     def create(self, user_id: str, date: str, stock_code: int, stock_name: str, action: str, amount: int, reason: str, amount_ratio: float, profit: int, profit_ratio: float, price: int):
         
 

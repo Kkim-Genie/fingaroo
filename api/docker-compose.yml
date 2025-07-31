@@ -2,11 +2,11 @@ version: "3"
 
 services:
   ai:
-    container_name: ai
-    image: ai
+    container_name: fingaroo
+    image: fingaroo
     build: .
     ports:
-      - "8001:8001"
+      - "8000:8000"
     volumes:
       - .:/app
     environment:

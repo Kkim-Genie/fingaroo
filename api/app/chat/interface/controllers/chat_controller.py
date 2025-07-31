@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from langchain_core.runnables import RunnableConfig
+from app.utils.id_utils import verify_access_token, verify_refresh_token
 from app.utils.langgraph import random_uuid
 from app.utils.messages import stream_graph, stream_graph_interrupt
 from app.agent.states.basic_state import GraphState
@@ -13,6 +14,8 @@ import json
 
 class ChatFirstRequest(BaseModel):
     query: str
+    access_token: str
+    refresh_token: str
 
 class ChatContinueRequest(BaseModel):
     query:str
@@ -40,6 +43,14 @@ async def options_interrupt():
 
 @router.post("/first", status_code=200)
 async def chat_first(request: ChatFirstRequest):
+
+    user = verify_access_token(request.access_token)
+    if(user is None):
+        user = verify_refresh_token(request.refresh_token)
+
+    if(user is None):
+        raise HTTPException(status_code=401, detail="Invalid token")
+
     messages: List[BaseMessage] = [HumanMessage(content=request.query)]
     
     inputs = GraphState(
@@ -47,7 +58,10 @@ async def chat_first(request: ChatFirstRequest):
         query=request.query,
         remaining_steps=25,
         is_last_step=False,
-        answer=""
+        answer="",
+        user_id=user.id,
+        analysis_query="",
+        analysis_corp_code=""
     )
     config = RunnableConfig(recursion_limit=20, configurable={"thread_id": random_uuid()})
 
@@ -60,6 +74,7 @@ async def chat_continue(request: ChatContinueRequest):
     graph_app = main_agent()
     config = RunnableConfig(recursion_limit=20, configurable={"thread_id": request.thread_id})
     saved_state = graph_app.get_state(config)
+    print(saved_state)
     graph_app.update_state(config, saved_state.values)
 
 

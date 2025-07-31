@@ -27,3 +27,12 @@ class DartCorpCodeRepository(IDartCorpCodeRepository):
             raise HTTPException(status_code=422)
 
         return DartCorpCodeVO(**row_to_dict(corp))
+
+    def find_by_corp_code(self, corp_code: str) -> DartCorpCodeVO:
+        with SessionLocal() as db:
+            corp = db.query(DartCorpCode).filter(DartCorpCode.corp_code == corp_code).first()
+
+        if not corp:
+            raise HTTPException(status_code=422)
+
+        return DartCorpCodeVO(**row_to_dict(corp))
