@@ -5,7 +5,7 @@ import useUserStore from "@/store/useUserStore";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import React from "react";
-import logo from "@/assets/fingaroo_logo.png";
+
 import { Avatar, Menu } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -80,7 +80,13 @@ export default function ChatHeader() {
           className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer"
           onClick={moveToHome}
         >
-          <Image className="rounded-full" src={logo} alt="logo" />
+          <Image
+            className="rounded-full"
+            src="/fingaroo_logo.png"
+            alt="logo"
+            width={50}
+            height={50}
+          />
         </div>
         <div className="flex flex-col -gap-1">
           <h1
