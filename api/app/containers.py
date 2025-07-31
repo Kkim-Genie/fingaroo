@@ -14,6 +14,10 @@ from app.knowledge.application.daily_report_service import DailyReportService
 from app.user.infra.repository.user_repo import UserRepository
 from app.user.application.user_service import UserService
 from app.stock_price.application.stock_price_service import StockPriceService
+from app.invest_log.infra.repository.user_asset_repo import UserAssetRepository
+from app.invest_log.application.user_asset_service import UserAssetService
+from app.invest_log.infra.repository.invest_log_repo import InvestLogRepository
+from app.invest_log.application.invest_log_service import InvestLogService
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
@@ -29,6 +33,8 @@ class Container(containers.DeclarativeContainer):
             "app.knowledge.interface.controllers.news_controller",
             "app.user.interface.controller.user_controller",
             "app.stock_price.interface.controller.stock_price_controller",
+            "app.invest_log.interface.controller.user_asset_controller",
+            "app.invest_log.interface.controller.invest_log_controller",
         ]
     )
 
@@ -51,3 +57,9 @@ class Container(containers.DeclarativeContainer):
     user_service = providers.Factory(UserService, user_repo=user_repo)
 
     stock_price_service = providers.Factory(StockPriceService, corp_code_service=corp_code_service)
+
+    user_asset_repo = providers.Factory(UserAssetRepository)
+    user_asset_service = providers.Factory(UserAssetService, user_asset_repo=user_asset_repo)
+
+    invest_log_repo = providers.Factory(InvestLogRepository)
+    invest_log_service = providers.Factory(InvestLogService, invest_log_repo=invest_log_repo)

@@ -36,14 +36,17 @@ def generate_access_token(payload: User) -> str:
     encoded_jwt = jwt.encode(to_encode, settings.JWT_ACCESS_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def verify_access_token(token: str) -> User:
+def verify_access_token(token: str) -> User|None:
     try:
         payload = jwt.decode(token, settings.JWT_ACCESS_SECRET_KEY, algorithms=[ALGORITHM])
         return User(**payload)
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
+        print("access expired")
+        return None
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        print("access invalid")
+        return None
+
 
 def generate_refresh_token(payload: User) -> str:
     expires_delta = timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
@@ -53,11 +56,13 @@ def generate_refresh_token(payload: User) -> str:
     encoded_jwt = jwt.encode(to_encode, settings.JWT_REFRESH_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def verify_refresh_token(token: str) -> User:
+def verify_refresh_token(token: str) -> User|None:
     try:
         payload = jwt.decode(token, settings.JWT_REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
         return User(**payload)
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
+        print("refresh expired")
+        return None
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        print("refresh invalid")
+        return None
