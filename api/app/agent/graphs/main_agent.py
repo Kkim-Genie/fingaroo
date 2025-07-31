@@ -2,11 +2,11 @@ from pydantic import BaseModel
 from typing import Literal
 from app.agent.states.basic_state import GraphState
 from app.agent.graphs.search_agent import search_routing_agent, search_news_node, search_daily_report_node, search_knowledge_base_node, generate_search_result_answer_node, check_search_answer_relevent_node, search_query_rewrite_node
-from app.agent.graphs.dart_agent import dart_agent
 from app.agent.graphs.answer_agent import answer_agent
 from app.agent.graphs.stock_price_agent import stock_price_agent
 from app.agent.graphs.invest_log_agent import invest_log_agent, invest_read_node, invest_create_node, invest_update_node, invest_delete_node
 from app.agent.graphs.invest_feedback_agent import invest_feedback_agent, load_invest_log_node, load_price_node
+from app.agent.graphs.analysis_company_agent import company_analysis_query_write_node, company_analysis_route_node, search_company_knowledge_base_node, search_stock_price_node, search_dart_node, find_corp_code_node, search_company_knowledge_base_node, check_company_search_relevent_node
 from app.config import get_settings
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -19,10 +19,9 @@ settings = get_settings()
 checkpointer = MemorySaver()
 
 members = [
-    "dart_agent",
     "stock_price_agent",
 ]
-options_for_next = ["answer_agent", "search_routing_agent", "invest_log_agent", "invest_feedback_agent"] + members
+options_for_next = ["answer_agent", "search_routing_agent", "invest_log_agent", "invest_feedback_agent", "company_analysis_agent"] + members
 
 system_prompt = f"""
     You are a supervisor tasked with managing a conversation between the
@@ -36,6 +35,7 @@ system_prompt = f"""
     stock_price_agent: 주식 가격을 검색하는 agent입니다.
     invest_log_agent: 매매일지를 관리하는 agent입니다.
     invest_feedback_agent: 매매일지를 기반으로 피드백을 제공하는 agent입니다.
+    company_analysis_agent: 회사를 분석하는 agent입니다.
 """
 
 prompt = ChatPromptTemplate.from_messages(
@@ -130,7 +130,6 @@ def main_agent():
 
     workflow.add_node("Supervisor", supervisor)
     workflow.add_node("search_routing_agent", search_routing_agent)
-    workflow.add_node("dart_agent", dart_agent)
     workflow.add_node("answer_agent", answer_agent)
     workflow.add_node("stock_price_agent", stock_price_agent)
 
@@ -152,6 +151,14 @@ def main_agent():
     workflow.add_node("load_price_node", load_price_node)
     workflow.add_node("invest_feedback_agent", invest_feedback_agent)
 
+    workflow.add_node("find_corp_code_node", find_corp_code_node)
+    workflow.add_node("company_analysis_query_write_node", company_analysis_query_write_node)
+    workflow.add_node("company_analysis_route_node", company_analysis_route_node)
+    workflow.add_node("search_company_knowledge_base_node", search_company_knowledge_base_node)
+    workflow.add_node("search_stock_price_node", search_stock_price_node)
+    workflow.add_node("search_dart_node", search_dart_node) 
+    workflow.add_node("check_company_search_relevent_node", check_company_search_relevent_node)
+
     for member in members:
         workflow.add_edge(member, "Supervisor")
 
@@ -160,6 +167,7 @@ def main_agent():
     conditional_map["search_routing_agent"] = "search_routing_agent"
     conditional_map["invest_log_agent"] = "invest_log_agent"
     conditional_map["invest_feedback_agent"] = "load_invest_log_node"
+    conditional_map["company_analysis_agent"] = "find_corp_code_node"
 
     def get_next(state):
         return state["next"]
@@ -205,6 +213,23 @@ def main_agent():
     workflow.add_edge("invest_create_node", "Supervisor")
     workflow.add_edge("invest_update_node", "Supervisor")
     workflow.add_edge("invest_delete_node", "Supervisor")
+
+    workflow.add_edge("find_corp_code_node", "company_analysis_query_write_node")
+    workflow.add_edge("company_analysis_query_write_node", "company_analysis_route_node")
+    workflow.add_conditional_edges("company_analysis_route_node", get_next, {
+        "search_knowledge_base": "search_company_knowledge_base_node",
+        "search_stock_price": "search_stock_price_node",
+        "search_dart": "search_dart_node",
+    })
+
+    workflow.add_edge("search_company_knowledge_base_node", "check_company_search_relevent_node")
+    workflow.add_edge("search_stock_price_node", "check_company_search_relevent_node")
+    workflow.add_edge("search_dart_node", "check_company_search_relevent_node")
+
+    workflow.add_conditional_edges("check_company_search_relevent_node", get_next, {
+        "yes": "Supervisor",
+        "no": "company_analysis_query_write_node",
+    })
 
     workflow.add_edge(START, "Supervisor")
     workflow.add_edge("answer_agent", END)

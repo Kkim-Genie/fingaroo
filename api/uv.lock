@@ -613,7 +613,7 @@ wheels = [
 ]
 
 [[package]]
-name = "fingoo-search-api"
+name = "fingaroo-search-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

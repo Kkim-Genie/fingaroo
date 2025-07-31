@@ -59,7 +59,9 @@ async def chat_first(request: ChatFirstRequest):
         remaining_steps=25,
         is_last_step=False,
         answer="",
-        user_id=user.id
+        user_id=user.id,
+        analysis_query="",
+        analysis_corp_code=""
     )
     config = RunnableConfig(recursion_limit=20, configurable={"thread_id": random_uuid()})
 

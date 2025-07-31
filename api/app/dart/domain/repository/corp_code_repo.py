@@ -8,9 +8,9 @@ class IDartCorpCodeRepository(metaclass=ABCMeta):
     def get_first(self) -> DartCorpCode:
         raise NotImplementedError
     
-    # @abstractmethod
-    # def find_by_corp_code(self, corp_code: str) -> DartCorpCode:
-    #     raise NotImplementedError
+    @abstractmethod
+    def find_by_corp_code(self, corp_code: str) -> DartCorpCode:
+        raise NotImplementedError
 
     @abstractmethod
     def find_by_corp_name(self, corp_name: str) -> DartCorpCode:
