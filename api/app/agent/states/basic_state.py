@@ -12,3 +12,4 @@ class GraphState(TypedDict):
     answer: Annotated[str, ""]
     remaining_steps: RemainingSteps
     is_last_step: IsLastStep
+    user_id: Annotated[str, ""]

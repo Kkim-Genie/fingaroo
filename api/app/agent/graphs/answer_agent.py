@@ -1,4 +1,5 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import AIMessage
 from langchain_naver import ChatClovaX
 from app.agent.states.basic_state import GraphState
 from app.config import get_settings
@@ -17,11 +18,18 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 def answer_agent(state: GraphState):
+    print('messages: ', state["messages"])
     llm = ChatClovaX(
         model=settings.LLM_MODEL_BASE, 
         api_key=settings.CLOVASTUDIO_API_KEY
     )
     chain = prompt | llm
     answer = chain.invoke(state)
-    answer.name = "answer_agent"
-    return {"answer": answer, "messages": state["messages"] + [answer]}
+    
+    # AIMessage 객체를 새로 생성하여 name 설정
+    named_answer = AIMessage(
+        content=answer.content,
+        name="answer_agent"
+    )
+    
+    return {"answer": named_answer, "messages": state["messages"] + [named_answer]}

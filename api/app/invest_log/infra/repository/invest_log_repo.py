@@ -19,6 +19,15 @@ class InvestLogRepository(IInvestLogRepository):
 
         return [InvestLogV0(**row_to_dict(invest_log)) for invest_log in invest_logs]
 
+    def find_by_id(self, invest_log_id: str) -> InvestLogV0:
+        with SessionLocal() as db:
+            invest_log = db.query(InvestLog).filter(InvestLog.id == invest_log_id).first()
+            
+        if not invest_log:
+            raise HTTPException(status_code=404, detail="Invest log not found")
+            
+        return InvestLogV0(**row_to_dict(invest_log))
+
     def create_invest_log(self, invest_log: InvestLogV0):
         with SessionLocal() as db:
             # domain 모델을 DB 모델로 변환

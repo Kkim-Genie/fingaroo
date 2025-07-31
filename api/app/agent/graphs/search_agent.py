@@ -134,29 +134,39 @@ async def search_news_node(state: GraphState):
     embeddings_repo = EmbeddingsRepository()
     embeddings_service = EmbeddingsService(embeddings_repo=embeddings_repo)
     news_service = NewsService(news_repo=news_repo, embeddings_service=embeddings_service)
-    news_list = news_service.find_by_date(search_date)
-    query_embedded = await embedding_string(state["query"])
-
-    news_with_similarity = []
-    for news in news_list:
-        embeded_content = await embedding_string(news.content)
+    
+    try:
+        news_list = news_service.find_by_date(search_date)
         
-        # 1차원 배열을 2차원 배열로 변환
-        embeded_content_2d = np.array(embeded_content).reshape(1, -1)
-        query_embedded_2d = np.array(query_embedded).reshape(1, -1)
-        
-        similarity = cosine_similarity(embeded_content_2d, query_embedded_2d)
-        news_with_similarity.append({
-            "news": news,
-            "similarity": similarity[0][0]  # 스칼라 값으로 변환
-        })
+        if not news_list or len(news_list) == 0:
+            content = f"<document>\n<date>{search_date}</date>\n<content>해당 날짜({search_date})의 뉴스를 찾을 수 없습니다.</content>\n</document>\n"
+        else:
+            query_embedded = await embedding_string(state["query"])
+            
+            news_with_similarity = []
+            for news in news_list:
+                embeded_content = await embedding_string(news.content)
+                
+                # 1차원 배열을 2차원 배열로 변환
+                embeded_content_2d = np.array(embeded_content).reshape(1, -1)
+                query_embedded_2d = np.array(query_embedded).reshape(1, -1)
+                
+                similarity = cosine_similarity(embeded_content_2d, query_embedded_2d)
+                news_with_similarity.append({
+                    "news": news,
+                    "similarity": similarity[0][0]  # 스칼라 값으로 변환
+                })
 
-    news_with_similarity.sort(key=lambda x: x["similarity"], reverse=True)
-    news_with_similarity = news_with_similarity[:5]
+            news_with_similarity.sort(key=lambda x: x["similarity"], reverse=True)
+            news_with_similarity = news_with_similarity[:5]
 
-    content = ""
-    for news in news_with_similarity:
-        content += f"<document>\n<title>{news['news'].title}</title><date>{news['news'].date}</date>\n<content>{news['news'].content}\n</content/></document>\n"
+            content = ""
+            for news in news_with_similarity:
+                content += f"<document>\n<title>{news['news'].title}</title><date>{news['news'].date}</date>\n<content>{news['news'].content}\n</content/></document>\n"
+                
+    except Exception as e:
+        print(f"Error finding news for date {search_date}: {e}")
+        content = f"<document>\n<date>{search_date}</date>\n<content>해당 날짜({search_date})의 뉴스를 찾을 수 없습니다.</content>\n</document>\n"
 
     tool_message = ToolMessage(content=content, name="search_news", tool_call_id=str(uuid.uuid4()))
     return {"messages": state["messages"] + [tool_message]}
@@ -168,10 +178,17 @@ async def search_daily_report_node(state: GraphState):
     embeddings_repo = EmbeddingsRepository()
     embeddings_service = EmbeddingsService(embeddings_repo=embeddings_repo)
     daily_report_service = DailyReportService(daily_report_repo=daily_report_repo, news_repo=news_repo, embeddings_service=embeddings_service)
-    daily_report_list = daily_report_service.find_by_date(search_date)
-    target_daily_report = daily_report_list[0]
-
-    content = f"<document>\n<date>{target_daily_report.date}</date>\n<content>{target_daily_report.content}\n</content/></document>\n"
+    
+    try:
+        daily_report_list = daily_report_service.find_by_date(search_date)
+        if daily_report_list and len(daily_report_list) > 0:
+            target_daily_report = daily_report_list[0]
+            content = f"<document>\n<date>{target_daily_report.date}</date>\n<content>{target_daily_report.content}\n</content/></document>\n"
+        else:
+            content = f"<document>\n<date>{search_date}</date>\n<content>해당 날짜({search_date})의 시황 보고서를 찾을 수 없습니다.</content>\n</document>\n"
+    except Exception as e:
+        print(f"Error finding daily report for date {search_date}: {e}")
+        content = f"<document>\n<date>{search_date}</date>\n<content>해당 날짜({search_date})의 시황 보고서를 찾을 수 없습니다.</content>\n</document>\n"
 
     tool_message = ToolMessage(content=content, name="search_daily_report", tool_call_id=str(uuid.uuid4()))
     return {"messages": state["messages"] + [tool_message]}
@@ -229,7 +246,7 @@ class AnswerResponse(BaseModel):
 
 def check_search_answer_relevent_node(state: GraphState):
     last_message = state["messages"][-1]
-    parsed_prompt = check_prompt.partial(question=state["query"], generation=last_message.content)
+    formatted_prompt = check_prompt.format(question=state["query"], generation=last_message.content)
     
     url = f"https://clovastudio.stream.ntruss.com/v3/chat-completions/HCX-007"
     
@@ -239,7 +256,7 @@ def check_search_answer_relevent_node(state: GraphState):
     }
     
     payload = {
-        "messages": [{"role": "user", "content": parsed_prompt}],
+        "messages": [{"role": "user", "content": formatted_prompt}],
         "maxCompletionTokens": 100,
         "temperature": 0.1,
         "thinking": {
