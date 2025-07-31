@@ -20,6 +20,9 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Fingaroo",
   description: "AI와 대화하는 채팅 인터페이스",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

@@ -8,6 +8,9 @@ import React from "react";
 import logo from "@/assets/fingaroo_logo.png";
 import { Avatar, Menu } from "@mantine/core";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import { API_URL } from "@/utils/consts";
+import { User } from "@/app/types";
 
 export default function ChatHeader() {
   const userStore = useCustomStore(useUserStore, (state) => state);
@@ -36,6 +39,40 @@ export default function ChatHeader() {
     router.push("/");
   };
 
+  const loginTest = async (id: string) => {
+    if (!userStore) return;
+    const res = await axios.post(`${API_URL}/user/login/test`, {
+      type: id,
+    });
+
+    const user: User = {
+      id: res.data.user.id,
+      name: res.data.user.name,
+      email: res.data.user.email,
+      gender: res.data.user.gender,
+      birthyear: res.data.user.birthyear,
+    };
+
+    userStore.set(user);
+
+    // Store tokens in cookies
+    if (res.data.access_token) {
+      Cookies.set("accessToken", res.data.access_token, {
+        expires: 7, // 7 days
+        secure: true,
+        sameSite: "strict",
+      });
+    }
+
+    if (res.data.refresh_token) {
+      Cookies.set("refreshToken", res.data.refresh_token, {
+        expires: 30, // 30 days
+        secure: true,
+        sameSite: "strict",
+      });
+    }
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center gap-3">
@@ -61,12 +98,33 @@ export default function ChatHeader() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           {userStore?.data.id === "" ? (
-            <button
-              className="bg-[#03c75a] text-white px-4 py-2 rounded-md font-bold"
-              onClick={NaverLogin}
-            >
-              네이버 로그인하기
-            </button>
+            <>
+              <Menu>
+                <Menu.Target>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer transition-colors">
+                    <span>🧪</span>
+                    <span className="text-sm text-gray-700">테스트 계정</span>
+                  </div>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item onClick={() => loginTest("test01")}>
+                    테스트A
+                  </Menu.Item>
+                  <Menu.Item onClick={() => loginTest("test02")}>
+                    테스트B
+                  </Menu.Item>
+                  <Menu.Item onClick={() => loginTest("test03")}>
+                    테스트C
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+              <button
+                className="bg-[#03c75a] text-white px-4 py-2 rounded-md font-bold"
+                onClick={NaverLogin}
+              >
+                네이버 로그인하기
+              </button>
+            </>
           ) : (
             <Menu shadow="md" width={280} position="bottom-end" offset={5}>
               <Menu.Target>

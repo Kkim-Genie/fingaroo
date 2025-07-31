@@ -1,16 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useChat } from "@/business/hooks/use-chat.hook";
+import useUserStore from "@/store/useUserStore";
 import React, { useEffect, useRef } from "react";
 
 export default function ChatInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { input, handleInputChange, handleSubmit, isLoading } = useChat();
+  const { data } = useUserStore();
+
+  const isUserLoggedIn = data.id !== "";
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && isUserLoggedIn) {
       textareaRef.current?.focus();
     }
-  }, [isLoading]);
+  }, [isLoading, isUserLoggedIn]);
 
   return (
     <form
@@ -25,15 +29,19 @@ export default function ChatInput() {
             onChange={handleInputChange}
             rows={1}
             className="w-full resize-none overflow-y-auto border-none p-0 px-1 text-lg scrollbar-thin focus:border-none focus:outline-none focus:shadow-none focus:ring-0"
-            placeholder="무엇이든 물어보세요."
-            disabled={isLoading}
+            placeholder={
+              isUserLoggedIn
+                ? "무엇이든 물어보세요."
+                : "로그인 후 이용해주세요."
+            }
+            disabled={isLoading || !isUserLoggedIn}
             style={{
               height: "auto",
               overflowY: "auto",
             }}
-            // 채팅 입력 시 높이 자동 조절 (로딩 중일 때는 무시)
+            // 채팅 입력 시 높이 자동 조절 (로딩 중이거나 로그인되지 않았을 때는 무시)
             onInput={(e) => {
-              if (isLoading) return;
+              if (isLoading || !isUserLoggedIn) return;
               const target = e.target as HTMLTextAreaElement;
               target.style.height = "auto";
               const maxHeight = 72;
@@ -46,7 +54,7 @@ export default function ChatInput() {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (!isLoading && input.trim() !== "") {
+                if (!isLoading && isUserLoggedIn && input.trim() !== "") {
                   handleSubmit(e as any);
                 }
               }
@@ -55,7 +63,7 @@ export default function ChatInput() {
         </div>
         <button
           type="submit"
-          disabled={!input.trim() || isLoading}
+          disabled={!input.trim() || isLoading || !isUserLoggedIn}
           className="flex-shrink-0 rounded-full bg-gradient-to-r from-[#FFA17C] to-[#FFB38F] p-3 text-white shadow-lg hover:from-[#FFA060] hover:to-[#FFA162] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
         >
           <svg

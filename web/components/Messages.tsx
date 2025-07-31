@@ -7,13 +7,14 @@ import { ToolMessage } from "@/app/types";
 import StockChart from "./StockChart";
 import { useUserAsset } from "@/business/hooks/use-user-asset.hook";
 import { useInvestLog } from "@/business/hooks/use-invest-log.hook";
+import useUserStore from "@/store/useUserStore";
 
 const flake = new FlakeId();
 
 /**chatbot과 한 대화내용들을 보여주는 컴포넌트  */
 export function Messages() {
   const { messages, isLoading } = useChat();
-
+  const { data } = useUserStore();
   const { fetchUserAssets } = useUserAsset();
   const { fetchInvestLogs } = useInvestLog();
 
@@ -35,9 +36,10 @@ export function Messages() {
   }, [lastMessageContent]);
 
   useEffect(() => {
+    if (data.id === "") return;
     fetchUserAssets();
     fetchInvestLogs();
-  }, []);
+  }, [data.id]);
 
   if (messages.length === 0) {
     return (
@@ -83,6 +85,9 @@ export function Messages() {
 
 const WelcomeScreen = () => {
   const { handleSubmit } = useChat();
+  const { data } = useUserStore();
+
+  const isUserLoggedIn = data.id !== "";
 
   const exampleQuestions = [
     "나의 매매일지를 보고 피드백해줘",
@@ -91,6 +96,7 @@ const WelcomeScreen = () => {
   ];
 
   const handleQuestionClick = (question: string) => {
+    if (!isUserLoggedIn) return;
     // 가짜 form event 생성해서 submit 실행
     const fakeEvent = {
       preventDefault: () => {},
@@ -125,7 +131,12 @@ const WelcomeScreen = () => {
           <button
             key={index}
             onClick={() => handleQuestionClick(question)}
-            className="w-full flex items-center justify-between bg-white rounded-3xl border border-gray-200 p-4 px-6 hover:shadow-md transition-shadow duration-200 group"
+            disabled={!isUserLoggedIn}
+            className={`w-full flex items-center justify-between rounded-3xl border p-4 px-6 transition-all duration-200 group ${
+              isUserLoggedIn
+                ? "bg-white border-gray-200 hover:shadow-md cursor-pointer"
+                : "bg-gray-50 border-gray-100 cursor-not-allowed opacity-50"
+            }`}
           >
             <span
               className="text-[#918787] font-bold text-left"
@@ -134,7 +145,13 @@ const WelcomeScreen = () => {
               “{question}
               {`"`}
             </span>
-            <div className="w-8 h-8 bg-[#FFA17C] rounded-full flex items-center justify-center flex-shrink-0 ml-7 group-hover:bg-[#FF9A6B] transition-colors duration-200">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ml-7 transition-colors duration-200 ${
+                isUserLoggedIn
+                  ? "bg-[#FFA17C] group-hover:bg-[#FF9A6B]"
+                  : "bg-gray-300"
+              }`}
+            >
               <svg
                 className="w-4 h-4 text-white"
                 fill="none"
