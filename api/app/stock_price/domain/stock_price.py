@@ -13,5 +13,9 @@ class StockPriceItem(BaseModel):
 class StockPrice(BaseModel):
     stock_name: str
     stock_code: str
+    current_price: int
+    change_price: int
+    change_rate: float
+    unit: str
     items: list[StockPriceItem]
     

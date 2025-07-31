@@ -5,6 +5,7 @@ from typing import List
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode, CrawlResult
 from crawl4ai import JsonCssExtractionStrategy
 from crawl4ai import BrowserConfig
+from app.utils.crawl_schemas.finance_quote import finance_quote_schema
 
 async def search_quote(query: str):
     
@@ -21,15 +22,9 @@ async def search_quote(query: str):
         # Not using js_only yet since it's our first load
     )
 
-    schema_file_path = f"../../utils/crawl_schemas/finance_quote.json"
-    if os.path.exists(schema_file_path):
-        with open(schema_file_path, "r") as f:
-            schema = json.load(f)
-    else:
-        raise FileNotFoundError(f"Schema file not found at {schema_file_path}. Please run generate_finance_quote_schema() first.")
 
     # Create no-LLM extraction strategy with the generated schema
-    extraction_strategy = JsonCssExtractionStrategy(schema)
+    extraction_strategy = JsonCssExtractionStrategy(finance_quote_schema)
 
     # A simple page that needs JS to reveal content
     async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as crawler:
