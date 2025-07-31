@@ -1,0 +1,49 @@
+finance_quote_schema = {
+  "name": "Google Finance Stock Quote Page",
+  "baseSelector": "div.T4LgNb",
+  "fields": [
+    {
+      "name": "name",
+      "selector": ".zzDege",
+      "type": "text"
+    },
+    {
+      "name": "price",
+      "selector": ".YMlKec.fxKbKc",
+      "type": "text"
+    },
+    {
+      "name": "exchange",
+      "selector": ".PdOqHc",
+      "type": "regex",
+      "pattern": "•\\s*([A-Z]+)"
+    },
+    {
+      "name": "symbol",
+      "selector": ".PdOqHc",
+      "type": "regex",
+      "pattern": "([0-9A-Z]+)\\s*•"
+    },
+    {
+      "name": "currency",
+      "selector": ".YMlKec.fxKbKc",
+      "type": "regex",
+      "pattern": "^([₩$¥A-Z]+)"
+    },
+    {
+      "name": "prevDayClosePrice",
+      "selector": ".gyFHrc:has(.mfs7Fc:contains('전일 종가')) .P6K39c",
+      "type": "text"
+    },
+    {
+      "name": "marketCapitalization",
+      "selector": ".gyFHrc:has(.mfs7Fc:contains('시가총액')) .P6K39c",
+      "type": "text"
+    },
+    {
+      "name": "information",
+      "selector": ".bLLb2d",
+      "type": "text"
+    }
+  ]
+}

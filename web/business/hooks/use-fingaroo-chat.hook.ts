@@ -18,8 +18,6 @@ export const useFingarooChat = () => {
     processInterrupt,
   } = useInterrupt();
 
-  console.log("messages", messages);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (isLoading || isInterruptProcessing) return; // 로딩 중이거나 인터럽트 처리 중일 때는 입력 무시
     setInput(e.target.value);
@@ -44,10 +42,13 @@ export const useFingarooChat = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+    directInput?: string
+  ) => {
     e.preventDefault();
 
-    const currentInput = input;
+    const currentInput = directInput || input;
     setInput("");
     setIsLoading(true);
 

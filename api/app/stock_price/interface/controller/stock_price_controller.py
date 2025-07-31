@@ -8,10 +8,10 @@ router = APIRouter(prefix="/stock-price", tags=["stock-price"])
 
 @router.get("/")
 @inject
-def stock_price(
+async def stock_price(
     name:str=Query(None), 
     stock_price_service: StockPriceService = Depends(Provide[Container.stock_price_service])
     ):
-    stock_price = stock_price_service.get_by_corp_name(name)
+    stock_price = await stock_price_service.get_by_corp_name(name)
     
     return stock_price.model_dump()

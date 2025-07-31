@@ -8,6 +8,8 @@ from app.dart.interface.controllers.dart_controller import router as dart_router
 from app.knowledge.interface.controllers.news_controller import router as news_routers
 from app.user.interface.controller.user_controller import router as user_routers
 from app.stock_price.interface.controller.stock_price_controller import router as stock_price_routers
+from app.invest_log.interface.controller.user_asset_controller import router as user_asset_routers
+from app.invest_log.interface.controller.invest_log_controller import router as invest_log_routers
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
@@ -45,6 +47,8 @@ app.include_router(dart_routers)
 app.include_router(news_routers)
 app.include_router(user_routers)
 app.include_router(stock_price_routers)
+app.include_router(user_asset_routers)
+app.include_router(invest_log_routers)
 
 @app.get("/")
 def server_check():

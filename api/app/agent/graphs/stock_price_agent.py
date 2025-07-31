@@ -27,7 +27,7 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-def stock_price_agent(state: GraphState):
+async def stock_price_agent(state: GraphState):
     formatted_prompt = prompt.format(messages=state["messages"])
     
     # CLOVA Studio v3 API 직접 호출
@@ -74,7 +74,7 @@ def stock_price_agent(state: GraphState):
         corp_code_repo = DartCorpCodeRepository()
         corp_code_service = DartCorpCodeService(corp_code_repo=corp_code_repo)
         stock_price_service = StockPriceService(corp_code_service=corp_code_service)
-        stock_price = stock_price_service.get_by_corp_name(company_name)
+        stock_price = await stock_price_service.get_by_corp_name(company_name)
 
         tool_message = ToolMessage(
             name="search_stock_price",

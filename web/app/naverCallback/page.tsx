@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, Suspense } from "react";
 import { API_URL } from "../../utils/consts";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -9,12 +9,12 @@ import useCustomStore from "@/store/useCustomStore";
 import useUserStore from "@/store/useUserStore";
 import { User } from "../types";
 
-const NaverCallback = () => {
+const NaverCallbackContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userStore = useCustomStore(useUserStore, (state) => state);
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (userStore === undefined || userStore.data.id !== "") {
       return;
     }
@@ -58,11 +58,11 @@ const NaverCallback = () => {
       // Optionally redirect to error page or show error message
       router.push("/");
     }
-  };
+  }, [userStore, searchParams, router]);
 
   useEffect(() => {
     fetchUserData();
-  }, [userStore]);
+  }, [fetchUserData]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -71,6 +71,23 @@ const NaverCallback = () => {
         <p className="mt-4 text-gray-600">로그인 처리 중...</p>
       </div>
     </div>
+  );
+};
+
+const NaverCallback = () => {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-4 text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      }
+    >
+      <NaverCallbackContent />
+    </Suspense>
   );
 };
 
