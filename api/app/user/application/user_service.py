@@ -66,4 +66,23 @@ class UserService:
                 print(f"Response content: {res.text}")
             return False, None, None
 
+    def login_test(self, type:str):
+        try:
+            
+            user = self.user_repo.find_by_id(type)
+
+            access_token = generate_access_token(user)
+            refresh_token = generate_refresh_token(user)
+
+            token = {
+                "access_token": access_token,
+                "refresh_token": refresh_token
+            }
+
+            return True, token, user;
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            print(f"Error type: {type(e).__name__}")
+            return False, None, None
+
         
