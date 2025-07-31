@@ -4,6 +4,7 @@ import "./globals.css";
 import ChatProvider from "../business/hooks/provider/chat-provider";
 import "@mantine/core/styles.css";
 import { MantineProvider } from "@mantine/core";
+import ChatHeader from "@/components/ChatHeader";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -32,7 +33,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <MantineProvider>
-          <ChatProvider>{children}</ChatProvider>
+          <ChatProvider>
+            <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+              <ChatHeader />
+              <div className="h-full">{children}</div>
+            </div>
+          </ChatProvider>
         </MantineProvider>
       </body>
     </html>

@@ -56,3 +56,54 @@ export interface User {
   gender: string;
   birthyear: number;
 }
+
+export interface InvestLog {
+  id: string;
+  user_id: string;
+  date: string;
+  stock_code: string;
+  stock_name: string;
+  action: string;
+  price: number;
+  amount: number;
+  reason: string;
+  amount_ratio: number;
+  profit: number;
+  profit_ratio: number;
+  created_at: string;
+}
+
+export interface CreateInvestLogRequest {
+  date: string;
+  stock_code: string;
+  stock_name: string;
+  action: string;
+  price: number;
+  amount: number;
+  reason: string;
+  amount_ratio: number;
+  profit: number;
+  profit_ratio: number;
+}
+
+export interface UpdateInvestLogRequest {
+  invest_log: InvestLog;
+}
+
+export interface UserAsset {
+  id: string;
+  user_id: string;
+  stock_code: string;
+  stock_name: string;
+  amount: number;
+}
+
+export interface CreateUserAssetRequest {
+  stock_code: string;
+  stock_name: string;
+  amount: number;
+}
+
+export interface UpdateUserAssetRequest {
+  user_asset: UserAsset;
+}

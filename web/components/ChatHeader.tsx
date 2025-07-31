@@ -7,9 +7,11 @@ import Image from "next/image";
 import React from "react";
 import logo from "@/assets/fingaroo_logo.png";
 import { Avatar, Menu } from "@mantine/core";
+import { useRouter } from "next/navigation";
 
 export default function ChatHeader() {
   const userStore = useCustomStore(useUserStore, (state) => state);
+  const router = useRouter();
 
   const NaverLogin = () => {
     const currentUrl = window.location.href;
@@ -26,10 +28,21 @@ export default function ChatHeader() {
     Cookies.remove("refreshToken");
   };
 
+  const moveToInvestLog = () => {
+    router.push("/invest-log");
+  };
+
+  const moveToHome = () => {
+    router.push("/");
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full flex items-center justify-center">
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center cursor-pointer"
+          onClick={moveToHome}
+        >
           <Image className="rounded-full" src={logo} alt="logo" />
         </div>
         <div className="flex flex-col -gap-1">
@@ -83,9 +96,7 @@ export default function ChatHeader() {
                 <div className="py-1">
                   <Menu.Item
                     className="hover:bg-gray-50 transition-colors duration-150"
-                    onClick={() => {
-                      // Add trading journal functionality here if needed
-                    }}
+                    onClick={moveToInvestLog}
                   >
                     <div className="flex items-center gap-3 px-2 py-1">
                       <span className="text-gray-500">📊</span>
