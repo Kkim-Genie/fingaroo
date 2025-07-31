@@ -1,165 +1,48 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
+import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import { InvestLog, UserAsset } from "../types";
 import InvestLogModal from "../../components/InvestLogModal";
 import UserAssetModal from "../../components/UserAssetModal";
 import { cn } from "@/utils/utlis";
+import { useInvestLog } from "../../business/hooks/use-invest-log.hook";
+import { useUserAsset } from "../../business/hooks/use-user-asset.hook";
 
 const InvestLogPage = () => {
   const [activeTab, setActiveTab] = useState<"invest_log" | "user_asset">(
     "invest_log"
   );
-  const [investLogs, setInvestLogs] = useState<InvestLog[]>([]);
-  const [userAssets, setUserAssets] = useState<UserAsset[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [showInvestLogModal, setShowInvestLogModal] = useState(false);
-  const [showUserAssetModal, setShowUserAssetModal] = useState(false);
-  const [editingInvestLog, setEditingInvestLog] = useState<InvestLog | null>(
-    null
-  );
-  const [editingUserAsset, setEditingUserAsset] = useState<UserAsset | null>(
-    null
-  );
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  // 투자 일지 hook 사용
+  const {
+    investLogs,
+    loading: investLogLoading,
+    showInvestLogModal,
+    editingInvestLog,
+    fetchInvestLogs,
+    handleInvestLogSubmit,
+    deleteInvestLog,
+    openInvestLogModal,
+    closeInvestLogModal,
+  } = useInvestLog();
 
-  const getTokens = () => {
-    const accessToken = Cookies.get("accessToken");
-    const refreshToken = Cookies.get("refreshToken");
-    return { accessToken, refreshToken };
-  };
+  // 보유 자산 hook 사용
+  const {
+    userAssets,
+    loading: userAssetLoading,
+    showUserAssetModal,
+    editingUserAsset,
+    fetchUserAssets,
+    handleUserAssetSubmit,
+    deleteUserAsset,
+    openUserAssetModal,
+    closeUserAssetModal,
+  } = useUserAsset();
 
-  const fetchInvestLogs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { accessToken, refreshToken } = getTokens();
-      const response = await axios.get(`${API_URL}/invest_log/`, {
-        params: { access_token: accessToken, refresh_token: refreshToken },
-      });
-      setInvestLogs(response.data);
-    } catch (error) {
-      console.error("Failed to fetch invest logs:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [API_URL]);
-
-  const fetchUserAssets = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { accessToken, refreshToken } = getTokens();
-      const response = await axios.get(`${API_URL}/invest_log/user_asset/`, {
-        params: { access_token: accessToken, refresh_token: refreshToken },
-      });
-      setUserAssets(response.data);
-    } catch (error) {
-      console.error("Failed to fetch user assets:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [API_URL]);
-
-  const handleInvestLogSubmit = async (data: Record<string, unknown>) => {
-    try {
-      const { accessToken, refreshToken } = getTokens();
-      if ("invest_log" in data) {
-        // Update case
-        await axios.put(`${API_URL}/invest_log/`, {
-          ...data,
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-      } else {
-        // Create case
-        await axios.post(`${API_URL}/invest_log/`, {
-          ...data,
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-      }
-      fetchInvestLogs();
-      setShowInvestLogModal(false);
-      setEditingInvestLog(null);
-    } catch (error) {
-      console.error("Failed to submit invest log:", error);
-    }
-  };
-
-  const deleteInvestLog = async (investLogId: string) => {
-    if (confirm("정말로 삭제하시겠습니까?")) {
-      try {
-        const { accessToken, refreshToken } = getTokens();
-        await axios.delete(`${API_URL}/invest_log/`, {
-          data: {
-            invest_log_id: investLogId,
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          },
-        });
-        fetchInvestLogs();
-      } catch (error) {
-        console.error("Failed to delete invest log:", error);
-      }
-    }
-  };
-
-  const handleUserAssetSubmit = async (data: Record<string, unknown>) => {
-    try {
-      const { accessToken, refreshToken } = getTokens();
-      if ("user_asset" in data) {
-        // Update case
-        await axios.put(`${API_URL}/invest_log/user_asset/`, {
-          ...data,
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-      } else {
-        // Create case
-        await axios.post(`${API_URL}/invest_log/user_asset/`, {
-          ...data,
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-      }
-      fetchUserAssets();
-      setShowUserAssetModal(false);
-      setEditingUserAsset(null);
-    } catch (error) {
-      console.error("Failed to submit user asset:", error);
-    }
-  };
-
-  const deleteUserAsset = async (assetId: string) => {
-    if (confirm("정말로 삭제하시겠습니까?")) {
-      try {
-        const { accessToken, refreshToken } = getTokens();
-        await axios.delete(`${API_URL}/invest_log/user_asset/`, {
-          data: {
-            asset_id: assetId,
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          },
-        });
-        fetchUserAssets();
-      } catch (error) {
-        console.error("Failed to delete user asset:", error);
-      }
-    }
-  };
-
-  const openInvestLogModal = (investLog?: InvestLog) => {
-    setEditingInvestLog(investLog || null);
-    setShowInvestLogModal(true);
-  };
-
-  const openUserAssetModal = (userAsset?: UserAsset) => {
-    setEditingUserAsset(userAsset || null);
-    setShowUserAssetModal(true);
-  };
+  // 현재 활성 탭에 따른 로딩 상태
+  const loading =
+    activeTab === "invest_log" ? investLogLoading : userAssetLoading;
 
   useEffect(() => {
     if (activeTab === "invest_log") {
@@ -248,10 +131,7 @@ const InvestLogPage = () => {
         <InvestLogModal
           investLog={editingInvestLog}
           onSubmit={handleInvestLogSubmit}
-          onClose={() => {
-            setShowInvestLogModal(false);
-            setEditingInvestLog(null);
-          }}
+          onClose={closeInvestLogModal}
         />
       )}
 
@@ -259,10 +139,7 @@ const InvestLogPage = () => {
         <UserAssetModal
           userAsset={editingUserAsset}
           onSubmit={handleUserAssetSubmit}
-          onClose={() => {
-            setShowUserAssetModal(false);
-            setEditingUserAsset(null);
-          }}
+          onClose={closeUserAssetModal}
         />
       )}
     </div>
