@@ -21,7 +21,7 @@ app = FastAPI()
 # CORS 미들웨어를 가장 먼저 추가하여 preflight 요청을 우선 처리
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://www.fingaroo.vercel.app"],  # 특정 도메인만 허용
+    allow_origins=["http://localhost:3000", "https://fingaroo.vercel.app", "https://www.fingaroo.vercel.app"],  # 특정 도메인만 허용
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
