@@ -1,3 +1,5 @@
+import { API_URL } from "@/utils/consts";
+
 export interface FirstChatApiRequest {
   query: string;
   access_token: string;
@@ -14,11 +16,9 @@ export interface InterruptRequest {
   thread_id: string;
 }
 
-const API_PATH = process.env.NEXT_PUBLIC_API_PATH || "http://localhost:8000";
-
 export class ChatApiService {
   static async sendFirstChat(request: FirstChatApiRequest): Promise<Response> {
-    const response = await fetch(`${API_PATH}/chat/first`, {
+    const response = await fetch(`${API_URL}/chat/first`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,7 +42,7 @@ export class ChatApiService {
       throw new Error("Thread ID is required for continue chat");
     }
 
-    const response = await fetch(`${API_PATH}/chat/continue`, {
+    const response = await fetch(`${API_URL}/chat/continue`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export class ChatApiService {
   }
 
   static async sendInterrupt(request: InterruptRequest): Promise<Response> {
-    const response = await fetch(`${API_PATH}/chat/interrupt`, {
+    const response = await fetch(`${API_URL}/chat/interrupt`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
