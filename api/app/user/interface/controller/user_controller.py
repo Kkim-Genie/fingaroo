@@ -10,6 +10,15 @@ settings = get_settings()
 
 router = APIRouter(prefix="/user", tags=["user"])
 
+# OPTIONS 메소드 핸들러 추가 - preflight 요청 처리
+@router.options("/login")
+async def options_login():
+    return {"message": "OK"}
+
+@router.options("/login/test")
+async def options_login_test():
+    return {"message": "OK"}
+
 class LoginRequest(BaseModel):
     code:str
 

@@ -6,6 +6,10 @@ from app.stock_price.application.stock_price_service import StockPriceService
 
 router = APIRouter(prefix="/stock-price", tags=["stock-price"])
 
+@router.options("/")
+async def options_stock_price():
+    return {"message": "OK"}
+
 @router.get("/")
 @inject
 async def stock_price(

@@ -8,6 +8,11 @@ from app.utils.id_utils import verify_access_token, verify_refresh_token
 
 router = APIRouter(prefix="/invest_log", tags=["invest_log"])
 
+@router.options("/")
+async def options_get_user_asset():
+    return {"message": "OK"}
+
+
 @router.get("/", status_code=200, response_model=list[InvestLog])
 @inject
 def get_user_asset(

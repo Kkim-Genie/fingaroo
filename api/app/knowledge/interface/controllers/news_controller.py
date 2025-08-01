@@ -7,6 +7,14 @@ from app.knowledge.domain.news import CreateNewsBody
 
 router = APIRouter(prefix="/knowledge/news", tags=["news"])
 
+@router.options("/{type}/latest")
+async def options_get_latest_news_date(type: str):
+    return {"message": "OK"}
+
+@router.options("/{type}/latest")
+async def options_get_latest_news_date(type: str):
+    return {"message": "OK"}
+
 @router.get("/{type}/latest", status_code=201, response_model=str)
 @inject
 def get_latest_news_date(
